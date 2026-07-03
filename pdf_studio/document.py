@@ -34,9 +34,18 @@ class Document:
         """Add a table. Accepts pandas DataFrame or list[list]."""
         self._elements.append(("table", data, caption))
 
-    def add_chart(self, figure, width: float | None = None, height: float | None = None) -> None:
-        """Add a matplotlib figure as an inline vector."""
-        self._elements.append(("chart", figure, width, height))
+    def add_chart(
+        self,
+        figure,
+        width: float | None = None,
+        height: float | None = None,
+        space_before: float = 0,
+        space_after: float = 6,
+    ) -> None:
+        """Add a matplotlib figure as an inline vector.
+        space_before / space_after: vertical spacing in points around the chart.
+        """
+        self._elements.append(("chart", figure, width, height, space_before, space_after))
 
     def add_page_break(self) -> None:
         """Force a page break. Next content starts on a new page."""

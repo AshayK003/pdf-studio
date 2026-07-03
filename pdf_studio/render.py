@@ -200,7 +200,7 @@ def _header_footer_callback(doc, header_text: str | None):
 
 def _build_story(pdf_doc) -> list:
     """Build the list of ReportLab flowables from document elements."""
-    from reportlab.platypus import Paragraph, PageBreak
+    from reportlab.platypus import Paragraph, PageBreak, Spacer
     from reportlab.platypus import ListFlowable, ListItem
     from reportlab.lib import colors
     from reportlab.lib.styles import ParagraphStyle
@@ -209,10 +209,14 @@ def _build_story(pdf_doc) -> list:
     for el in pdf_doc._elements:
         etype = el[0]
         if etype == "chart":
-            _, figure, width, height = el
+            _, figure, width, height, space_before, space_after = el
             item = _build_chart(figure, width, height)
             if item is not None:
+                if space_before:
+                    story.append(Spacer(1, space_before))
                 story.append(item)
+                if space_after:
+                    story.append(Spacer(1, space_after))
         elif etype == "heading":
             _, text, level = el
             story.append(Paragraph(str(text), _heading_style(level)))
