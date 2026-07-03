@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+engineering_memory.md
+AGENTS.md
+_demo_output.pdf

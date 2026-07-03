@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+from .styles import Style, _default_style
+
+
+class Document:
+    """A PDF document under construction.
+
+    Usage:
+        doc = Document()
+        doc.add_heading("Title", level=0)
+        doc.add_paragraph("Body text", style=Style(...))
+        doc.add_table(df, caption="Data")
+        doc.add_chart(fig)
+        doc.set_header("Page {page} of {total}")
+        doc.render("output.pdf")
+    """
+
+    def __init__(self, page_size: str = "A4", margins: str = "1in"):
+        self._elements: list = []
+        self._header: str | None = None
+        self._page_size = page_size
+        self._margins = margins
+
+    def add_heading(self, text: str, level: int = 0) -> None:
+        """Add a heading. level=0 → title, level=1 → h1, level=2 → h2."""
+        self._elements.append(("heading", text, level))
+
+    def add_paragraph(self, text: str, style: Style | None = None) -> None:
+        """Add a body paragraph with optional Style."""
+        self._elements.append(("paragraph", text, style or _default_style()))
+
+    def add_table(self, data, caption: str | None = None) -> None:
+        """Add a table. Accepts pandas DataFrame or list[list]."""
+        self._elements.append(("table", data, caption))
+
+    def add_chart(self, figure, width: float | None = None, height: float | None = None) -> None:
+        """Add a matplotlib figure as an inline vector."""
+        self._elements.append(("chart", figure, width, height))
+
+    def set_header(self, text: str) -> None:
+        """Set a running header with optional {page} and {total} placeholders."""
+        self._header = text
+
+    def render(self, path: str) -> None:
+        """Render the document to a PDF file."""
+        from .render import render_pdf
+
+        render_pdf(self, path)
