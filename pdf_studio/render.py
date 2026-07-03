@@ -196,7 +196,9 @@ def _header_footer_callback(doc, header_text: str | None):
             text = text.replace("{total}", str(page_doc.page))
             canvas.saveState()
             canvas.setFont("Inter", 9)
-            canvas.drawCentredString(page_doc.width / 2.0, page_doc.height + 14, text)
+            # Position in the top margin, above the content frame
+            header_y = page_doc.height + page_doc.topMargin - 14
+            canvas.drawCentredString(page_doc.width / 2.0, header_y, text)
             canvas.restoreState()
 
     return callback
