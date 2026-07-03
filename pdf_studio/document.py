@@ -16,7 +16,7 @@ class Document:
         doc.render("output.pdf")
     """
 
-    def __init__(self, page_size: str = "A4", margins: str = "1in"):
+    def __init__(self, page_size: str = "A4", margins: str = "32pt"):
         self._elements: list = []
         self._header: str | None = None
         self._page_size = page_size
@@ -30,9 +30,9 @@ class Document:
         """Add a body paragraph with optional Style."""
         self._elements.append(("paragraph", text, style or _default_style()))
 
-    def add_table(self, data, caption: str | None = None) -> None:
+    def add_table(self, data, caption: str | None = None, right_align_cols: list[int] | None = None) -> None:
         """Add a table. Accepts pandas DataFrame or list[list]."""
-        self._elements.append(("table", data, caption))
+        self._elements.append(("table", data, caption, right_align_cols))
 
     def add_chart(
         self,

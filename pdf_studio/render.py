@@ -79,9 +79,9 @@ def _heading_style(level: int) -> "ParagraphStyle":
         f"Heading{level}",
         fontName=font_name,
         fontSize=size,
-        leading=size * 1.3,
-        spaceBefore=12,
-        spaceAfter=6,
+        leading=size * 1.2,
+        spaceBefore=14,
+        spaceAfter=14,
         textColor=HexColor("#1a1a1a"),
     )
 
@@ -93,7 +93,7 @@ def _parse_color(hex_str: str) -> "Color":
     return HexColor(hex_str)
 
 
-def _build_table(data, caption: str | None):
+def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None):
     """Convert data (DataFrame or list[list]) into a ReportLab Table flowable."""
     from reportlab.lib import colors
     from reportlab.lib.units import inch
@@ -134,12 +134,16 @@ def _build_table(data, caption: str | None):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2d2d2d")),
         ("ALIGN", (0, 0), (-1, -1), "LEFT"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
     ]
+    # Right-align specified numeric columns (data rows only)
+    if right_align_cols:
+        for col_idx in right_align_cols:
+            style_cmds.append(("ALIGN", (col_idx, 1), (col_idx, -1), "RIGHT"))
     # Alternating row colors (skip header row)
     for i in range(1, len(data)):
         bg = colors.HexColor("#f5f5f5") if i % 2 == 0 else colors.white
@@ -150,7 +154,7 @@ def _build_table(data, caption: str | None):
     if caption:
         from reportlab.platypus import Paragraph as P, Spacer
 
-        cap_style = _to_reportlab_style(Style(font=Font("Inter", 9, italic=True), space_before=8, space_after=4))
+        cap_style = _to_reportlab_style(Style(font=Font("Inter", 9, italic=True), space_before=12, space_after=4))
         return [P(caption, cap_style), t]
 
     return t
@@ -192,7 +196,7 @@ def _header_footer_callback(doc, header_text: str | None):
             text = text.replace("{total}", str(page_doc.page))
             canvas.saveState()
             canvas.setFont("Inter", 9)
-            canvas.drawCentredString(page_doc.width / 2.0, page_doc.height + 30, text)
+            canvas.drawCentredString(page_doc.width / 2.0, page_doc.height + 14, text)
             canvas.restoreState()
 
     return callback
@@ -224,8 +228,8 @@ def _build_story(pdf_doc) -> list:
             _, text, style = el
             story.append(Paragraph(text, _to_reportlab_style(style)))
         elif etype == "table":
-            _, data, caption = el
-            item = _build_table(data, caption)
+            _, data, caption, right_align_cols = el
+            item = _build_table(data, caption, right_align_cols)
             if isinstance(item, list):
                 story.extend(item)
             else:
@@ -241,6 +245,9 @@ def _build_story(pdf_doc) -> list:
                 bulletType="bullet",
                 start=None,
                 bulletFontSize=rs.fontSize * 0.7,
+                leftIndent=14,
+                spaceBefore=3,
+                spaceAfter=3,
             ))
     return story
 
@@ -259,6 +266,8 @@ def render_pdf(pdf_doc, path: str) -> None:
     margins = pdf_doc._margins
     if isinstance(margins, str) and margins.endswith("in"):
         margin_pts = float(margins.replace("in", "")) * inch
+    elif isinstance(margins, str) and margins.endswith("pt"):
+        margin_pts = float(margins.replace("pt", ""))
     else:
         margin_pts = inch
 
