@@ -200,7 +200,10 @@ def _header_footer_callback(doc, header_text: str | None):
 
 def _build_story(pdf_doc) -> list:
     """Build the list of ReportLab flowables from document elements."""
-    from reportlab.platypus import Paragraph
+    from reportlab.platypus import Paragraph, PageBreak
+    from reportlab.platypus import ListFlowable, ListItem
+    from reportlab.lib import colors
+    from reportlab.lib.styles import ParagraphStyle
 
     story = []
     for el in pdf_doc._elements:
@@ -223,6 +226,18 @@ def _build_story(pdf_doc) -> list:
                 story.extend(item)
             else:
                 story.append(item)
+        elif etype == "page_break":
+            story.append(PageBreak())
+        elif etype == "bullet":
+            _, text, style = el
+            rs = _to_reportlab_style(style)
+            p = Paragraph(text, rs)
+            story.append(ListFlowable(
+                [ListItem(p, bulletColor=colors.HexColor("#1a1a1a"))],
+                bulletType="bullet",
+                start=None,
+                bulletFontSize=rs.fontSize * 0.7,
+            ))
     return story
 
 

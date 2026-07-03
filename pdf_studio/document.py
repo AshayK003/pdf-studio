@@ -38,6 +38,14 @@ class Document:
         """Add a matplotlib figure as an inline vector."""
         self._elements.append(("chart", figure, width, height))
 
+    def add_page_break(self) -> None:
+        """Force a page break. Next content starts on a new page."""
+        self._elements.append(("page_break",))
+
+    def add_bullet(self, text: str, style: Style | None = None) -> None:
+        """Add a bullet-pointed list item."""
+        self._elements.append(("bullet", text, style or _default_style()))
+
     def set_header(self, text: str) -> None:
         """Set a running header with optional {page} and {total} placeholders."""
         self._header = text
