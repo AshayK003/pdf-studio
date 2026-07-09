@@ -43,6 +43,42 @@ def test_table_empty_data_returns_spacer():
     assert isinstance(result, Spacer)
 
 
+def test_right_align_column_applies_to_data_rows():
+    table = _build_table(
+        [["Item", "Amount"], ["One", "10"], ["Two", "20"]],
+        caption=None,
+        right_align_cols=[1],
+    )
+
+    assert table._cellStyles[1][1].alignment == "RIGHT"
+    assert table._cellStyles[2][1].alignment == "RIGHT"
+    assert table._cellStyles[1][0].alignment == "LEFT"
+
+
+def test_right_align_multiple_columns():
+    table = _build_table(
+        [["Item", "Qty", "Amount"], ["One", "2", "10"], ["Two", "4", "20"]],
+        caption=None,
+        right_align_cols=[1, 2],
+    )
+
+    assert table._cellStyles[1][1].alignment == "RIGHT"
+    assert table._cellStyles[1][2].alignment == "RIGHT"
+    assert table._cellStyles[2][1].alignment == "RIGHT"
+    assert table._cellStyles[2][2].alignment == "RIGHT"
+
+
+def test_right_align_empty_list_leaves_default_alignment():
+    table = _build_table(
+        [["Item", "Amount"], ["One", "10"]],
+        caption=None,
+        right_align_cols=[],
+    )
+
+    assert table._cellStyles[1][0].alignment == "LEFT"
+    assert table._cellStyles[1][1].alignment == "LEFT"
+
+
 def test_chart_scaling_uses_original_dimensions(tmp_path: Path):
     """Regression for #2: scale must use orig SVG size, not overwritten size."""
     import matplotlib
