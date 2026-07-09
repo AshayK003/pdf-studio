@@ -180,9 +180,15 @@ def _build_chart(figure, width: float | None = None, height: float | None = None
     if height is None:
         height = width / aspect if aspect else width * 0.6
 
+    # Save original SVG dimensions before overwriting — otherwise the scale
+    # factor becomes width/width = 1.0 and charts never resize.
+    orig_width = drawing.width
+    orig_height = drawing.height
+
     drawing.width = width
     drawing.height = height
-    drawing.scale(width / drawing.width, height / drawing.height)
+    if orig_width and orig_height:
+        drawing.scale(width / orig_width, height / orig_height)
 
     return drawing
 
