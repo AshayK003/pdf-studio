@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 from .styles import Style, Font
@@ -53,6 +54,13 @@ def _to_reportlab_style(style: Style) -> "ParagraphStyle":
     font = style.font or Font()
     # v0.1.0 bundles Regular variants only. bold/italic use same
     # regular font. Add variant TTF files when someone needs real bold/italic.
+    if font.bold or font.italic:
+        warnings.warn(
+            "pdf-studio v0.1.0 bundles Regular font weights only. "
+            "Bold and italic flags are ignored until variant TTF files are bundled.",
+            UserWarning,
+            stacklevel=2,
+        )
     font_name = font.family
 
     return ParagraphStyle(
