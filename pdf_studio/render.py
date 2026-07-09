@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .styles import Style, Font
 
-# ponytail: simple name→filename mapping for bundled fonts.
+# Bundled font name→filename mapping. Add new fonts here when bundled.
 # Add new fonts here when bundled.
 _BUILTIN_FONTS: dict[str, str] = {
     "Inter": "Inter-Regular.ttf",
@@ -12,7 +12,7 @@ _BUILTIN_FONTS: dict[str, str] = {
     "JetBrainsMono": "JetBrainsMono-Regular.ttf",
 }
 
-_FONTS_REGISTERED = False  # ponytail: global flag; lru_cache if invalidation needed
+_FONTS_REGISTERED = False  # global flag for one-time font registration
 
 
 def _register_fonts() -> None:
@@ -51,7 +51,7 @@ def _to_reportlab_style(style: Style) -> "ParagraphStyle":
         "justify": TA_JUSTIFY,
     }
     font = style.font or Font()
-    # ponytail: v0.1.0 bundles Regular variants only. bold/italic use same
+    # v0.1.0 bundles Regular variants only. bold/italic use same
     # regular font. Add variant TTF files when someone needs real bold/italic.
     font_name = font.family
 
@@ -99,7 +99,7 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
     from reportlab.lib.units import inch
     from reportlab.platypus import Table, TableStyle, Paragraph
 
-    # ponytail: duck-type DataFrame without importing pandas
+    # duck-type DataFrame without importing pandas
     if hasattr(data, "iloc"):
         header = list(data.columns)
         rows = data.values.tolist()
@@ -164,7 +164,7 @@ def _build_chart(figure, width: float | None = None, height: float | None = None
     """Convert a matplotlib figure into an inline vector PDF flowable."""
     from io import BytesIO
 
-    # ponytail: SVG via BytesIO → svg2rlg. No temp files.
+    # SVG via BytesIO → svg2rlg. No temp files.
     svg_io = BytesIO()
     figure.savefig(svg_io, format="svg", bbox_inches="tight")
     svg_io.seek(0)

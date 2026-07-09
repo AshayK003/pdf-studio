@@ -1,9 +1,25 @@
+# Internal engineering files — never committed
+internals/
+engineering_memory.md
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
 *.egg-info/
 dist/
 build/
+.eggs/
+
+# Environment
+.env
+venv/
 .venv/
-engineering_memory.md
-AGENTS.md
-_demo_output.pdf
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
