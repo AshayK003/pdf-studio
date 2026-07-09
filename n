@@ -1,0 +1,6 @@
+import pytest
+from pdf_studio.document import Document
+
+def test_document_creation() -> None:
+    doc = Document()
+    assert doc.pages == []
