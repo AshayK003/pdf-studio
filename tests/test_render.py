@@ -2,10 +2,12 @@
 
 from pathlib import Path
 
+import pytest
 from reportlab.platypus import Spacer
 
 from pdf_studio.document import Document
-from pdf_studio.render import _build_table, render_pdf
+from pdf_studio.render import _build_table, _to_reportlab_style, render_pdf
+from pdf_studio.styles import Font, Style
 
 
 def test_render_pdf_produces_valid_file(tmp_path: Path):
@@ -59,3 +61,8 @@ def test_chart_scaling_uses_original_dimensions(tmp_path: Path):
     render_pdf(doc, str(out))
     plt.close(fig)
     assert out.read_bytes()[:4] == b"%PDF"
+
+
+def test_font_style_flags_emit_warning():
+    with pytest.warns(UserWarning, match="Regular font weights only"):
+        _to_reportlab_style(Style(font=Font(bold=True, italic=True)))
