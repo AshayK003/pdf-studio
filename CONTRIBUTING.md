@@ -75,10 +75,34 @@ add support for custom TTF fonts
 
 ## Pull Requests
 
-- Keep PRs focused — one change per PR
+- Keep PRs focused — one change per PR (target ≤200 lines changed)
 - Include a description of what changed and why
 - Reference related issues
+- Small PRs get reviewed and merged faster. Split large features into sequential PRs.
 
-## Questions?
+## Troubleshooting
+
+### Font bold/italic not rendering
+
+If a font's bold or italic style appears the same as the regular style, the font file likely doesn't include that weight variant.
+
+**Cause:** The PDF library falls back to the nearest available weight when the requested one isn't in the font file.
+
+**Fix:** Register a font that has the weight you need. For bundled fonts:
+
+- **Inter** (bundled) — supports Regular, Bold, Italic, Bold Italic
+- **Lora** (bundled) — supports Regular, Bold, Italic, Bold Italic
+- **JetBrains Mono** (bundled) — supports Regular, Bold, Italic, Bold Italic
+
+Example:
+
+```python
+from pdf_studio import Font
+bold_font = Font("Inter", size=12, weight="bold")  # works with bundled Inter
+```
+
+For custom fonts, verify the TTF/OTF file includes the `bold` and `italic` tables (check with `fc-query` or font book).
+
+### Questions?
 
 Open an issue or start a discussion on GitHub.
