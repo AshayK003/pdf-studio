@@ -17,7 +17,7 @@ Verify everything works:
 
 ```bash
 python _demo.py              # generates example.pdf
-pytest                        # 12 tests, all pass
+pytest                        # 22 tests, all pass
 ```
 
 ## Development Workflow
@@ -90,15 +90,15 @@ If a font's bold or italic style appears the same as the regular style, the font
 
 **Fix:** Register a font that has the weight you need. For bundled fonts:
 
-- **Inter** (bundled) — supports Regular, Bold, Italic, Bold Italic
-- **Lora** (bundled) — supports Regular, Bold, Italic, Bold Italic
-- **JetBrains Mono** (bundled) — supports Regular, Bold, Italic, Bold Italic
+- **Inter** (bundled) — only Regular is bundled
+- **Lora** (bundled) — only Regular is bundled
+- **JetBrains Mono** (bundled) — only Regular is bundled
 
 Example:
 
 ```python
 from pdf_studio import Font
-bold_font = Font("Inter", size=12, weight="bold")  # works with bundled Inter
+bold_font = Font("Inter", size=12, bold=True)  # works if a bold variant of Inter is registered
 ```
 
 For custom fonts, verify the TTF/OTF file includes the `bold` and `italic` tables (check with `fc-query` or font book).
