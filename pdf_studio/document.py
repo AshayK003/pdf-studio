@@ -41,11 +41,17 @@ class Document:
         height: float | None = None,
         space_before: float = 0,
         space_after: float = 6,
+        close_figure: bool = True,
     ) -> None:
         """Add a matplotlib figure as an inline vector.
+
         space_before / space_after: vertical spacing in points around the chart.
+        close_figure: release the figure after rendering. Set to False when the
+            caller needs to reuse the figure after rendering the document.
         """
-        self._elements.append(("chart", figure, width, height, space_before, space_after))
+        self._elements.append(
+            ("chart", figure, width, height, space_before, space_after, close_figure)
+        )
 
     def add_page_break(self) -> None:
         """Force a page break. Next content starts on a new page."""

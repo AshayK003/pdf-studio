@@ -168,13 +168,24 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
     return t
 
 
-def _build_chart(figure, width: float | None = None, height: float | None = None):
+def _build_chart(
+    figure,
+    width: float | None = None,
+    height: float | None = None,
+    close_figure: bool = True,
+):
     """Convert a matplotlib figure into an inline vector PDF flowable."""
     from io import BytesIO
 
     # SVG via BytesIO → svg2rlg. No temp files.
     svg_io = BytesIO()
-    figure.savefig(svg_io, format="svg", bbox_inches="tight")
+    try:
+        figure.savefig(svg_io, format="svg", bbox_inches="tight")
+    finally:
+        if close_figure:
+            from matplotlib import pyplot as plt
+
+            plt.close(figure)
     svg_io.seek(0)
 
     from reportlab.graphics import renderPDF
@@ -229,8 +240,8 @@ def _build_story(pdf_doc) -> list:
     for el in pdf_doc._elements:
         etype = el[0]
         if etype == "chart":
-            _, figure, width, height, space_before, space_after = el
-            item = _build_chart(figure, width, height)
+            _, figure, width, height, space_before, space_after, close_figure = el
+            item = _build_chart(figure, width, height, close_figure)
             if item is not None:
                 if space_before:
                     story.append(Spacer(1, space_before))

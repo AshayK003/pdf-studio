@@ -95,8 +95,27 @@ def test_chart_scaling_uses_original_dimensions(tmp_path: Path):
     doc.add_chart(fig, width=200, height=100)
     out = tmp_path / "chart.pdf"
     render_pdf(doc, str(out))
-    plt.close(fig)
     assert out.read_bytes()[:4] == b"%PDF"
+    assert not plt.fignum_exists(fig.number)
+
+
+def test_chart_can_preserve_figure_after_rendering(tmp_path: Path):
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [1, 4, 9])
+    doc = Document()
+    doc.add_chart(fig, close_figure=False)
+
+    out = tmp_path / "preserved-chart.pdf"
+    render_pdf(doc, str(out))
+
+    assert out.read_bytes()[:4] == b"%PDF"
+    assert plt.fignum_exists(fig.number)
+    plt.close(fig)
 
 
 def test_font_style_flags_emit_warning():
