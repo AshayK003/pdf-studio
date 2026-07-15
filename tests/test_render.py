@@ -1,10 +1,16 @@
 """Tests for PDF rendering."""
 
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 
 import pytest
+from reportlab.lib import fonts
+from reportlab.pdfbase import pdfmetrics, ttfonts
 from reportlab.platypus import Spacer
 
+import pdf_studio.render as render_module
 from pdf_studio.document import Document
 from pdf_studio.render import _build_table, _to_reportlab_style, render_pdf
 from pdf_studio.styles import Font, Style
@@ -121,3 +127,33 @@ def test_chart_can_preserve_figure_after_rendering(tmp_path: Path):
 def test_font_style_flags_emit_warning():
     with pytest.warns(UserWarning, match="Regular font weights only"):
         _to_reportlab_style(Style(font=Font(bold=True, italic=True)))
+
+
+def test_font_registration_is_thread_safe(monkeypatch: pytest.MonkeyPatch):
+    workers = 8
+    start = Barrier(workers)
+    registered_fonts: list[str] = []
+
+    monkeypatch.setattr(render_module, "_FONTS_REGISTERED", False)
+    monkeypatch.setattr(
+        render_module,
+        "_BUILTIN_FONTS",
+        {"Inter": "Inter-Regular.ttf"},
+    )
+    monkeypatch.setattr(ttfonts, "TTFont", lambda family, _path: family)
+    monkeypatch.setattr(fonts, "addMapping", lambda *_args: None)
+
+    def register_font(font: str) -> None:
+        registered_fonts.append(font)
+        time.sleep(0.05)
+
+    monkeypatch.setattr(pdfmetrics, "registerFont", register_font)
+
+    def register_from_thread(_index: int) -> None:
+        start.wait()
+        render_module._register_fonts()
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        list(executor.map(register_from_thread, range(workers)))
+
+    assert registered_fonts == ["Inter"]
