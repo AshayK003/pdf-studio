@@ -90,7 +90,7 @@ That's it. Three methods and one `render()` call produces a multi-page PDF with 
 | `add_heading(text, level=0)` | `level`: 0=title, 1=h1, 2=h2 | Add a heading |
 | `add_paragraph(text, style=None)` | `style`: optional `Style` | Add body text |
 | `add_table(data, caption=None)` | `data`: DataFrame or `list[list]` | Add a styled table with alternating rows |
-| `add_chart(figure, width=None, height=None)` | matplotlib `Figure` | Convert chart to inline vector PDF |
+| `add_chart(figure, width=None, height=None, close_figure=True)` | matplotlib `Figure` | Convert chart to inline vector PDF and release it after rendering |
 | `add_bullet(text, style=None)` | — | Add a bullet-pointed item |
 | `add_page_break()` | — | Force a new page |
 | `set_header(text)` | supports `{page}` and `{total}` | Running header on every page |
