@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from threading import Lock
 
 from .styles import Style, Font
 
@@ -14,30 +15,36 @@ _BUILTIN_FONTS: dict[str, str] = {
 }
 
 _FONTS_REGISTERED = False  # global flag for one-time font registration
+_FONT_REGISTRATION_LOCK = Lock()
 
 
 def _register_fonts() -> None:
     global _FONTS_REGISTERED
     if _FONTS_REGISTERED:
         return
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.lib.fonts import addMapping
 
-    fonts_dir = Path(__file__).parent / "fonts"
+    with _FONT_REGISTRATION_LOCK:
+        if _FONTS_REGISTERED:
+            return
 
-    for family, filename in _BUILTIN_FONTS.items():
-        ttf_path = fonts_dir / filename
-        if not ttf_path.exists():
-            continue
-        # Register regular variant under the family name
-        font = TTFont(family, str(ttf_path))
-        pdfmetrics.registerFont(font)
-        # Tell ps2tt about this font family
-        addMapping(family, 0, 0, family)  # normal
-        addMapping(family, 1, 0, family)  # bold (same font for now)
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.lib.fonts import addMapping
 
-    _FONTS_REGISTERED = True
+        fonts_dir = Path(__file__).parent / "fonts"
+
+        for family, filename in _BUILTIN_FONTS.items():
+            ttf_path = fonts_dir / filename
+            if not ttf_path.exists():
+                continue
+            # Register regular variant under the family name
+            font = TTFont(family, str(ttf_path))
+            pdfmetrics.registerFont(font)
+            # Tell ps2tt about this font family
+            addMapping(family, 0, 0, family)  # normal
+            addMapping(family, 1, 0, family)  # bold (same font for now)
+
+        _FONTS_REGISTERED = True
 
 
 def _to_reportlab_style(style: Style) -> "ParagraphStyle":
