@@ -12,7 +12,12 @@ from reportlab.platypus import Spacer
 
 import pdf_studio.render as render_module
 from pdf_studio.document import Document
-from pdf_studio.render import _build_table, _to_reportlab_style, render_pdf
+from pdf_studio.render import (
+    _build_table,
+    _parse_color,
+    _to_reportlab_style,
+    render_pdf,
+)
 from pdf_studio.styles import Font, Style
 
 
@@ -127,6 +132,12 @@ def test_chart_can_preserve_figure_after_rendering(tmp_path: Path):
 def test_font_style_flags_emit_warning():
     with pytest.warns(UserWarning, match="Regular font weights only"):
         _to_reportlab_style(Style(font=Font(bold=True, italic=True)))
+
+
+@pytest.mark.parametrize("color", ["not-a-color", "#12", "#xyzxyz"])
+def test_parse_color_rejects_invalid_hex_with_clear_error(color: str):
+    with pytest.raises(ValueError, match=f"Invalid hex color: {color!r}"):
+        _parse_color(color)
 
 
 def test_font_registration_is_thread_safe(monkeypatch: pytest.MonkeyPatch):
