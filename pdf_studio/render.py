@@ -224,7 +224,7 @@ def _header_footer_callback(doc, header_text: str | None):
 
     def callback(canvas, page_doc):
         if header_text:
-            text = header_text.replace("{page}", str(canvas._pageNumber))
+            text = header_text.replace("{page}", str(canvas.getPageNumber()))
             text = text.replace("{total}", str(page_doc.page))
             canvas.saveState()
             canvas.setFont("Inter", 9)

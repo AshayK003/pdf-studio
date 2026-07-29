@@ -12,7 +12,12 @@ from reportlab.platypus import Spacer
 
 import pdf_studio.render as render_module
 from pdf_studio.document import Document
-from pdf_studio.render import _build_table, _to_reportlab_style, render_pdf
+from pdf_studio.render import (
+    _build_table,
+    _header_footer_callback,
+    _to_reportlab_style,
+    render_pdf,
+)
 from pdf_studio.styles import Font, Style
 
 
@@ -37,6 +42,41 @@ def test_two_pass_resolves_total_placeholder(tmp_path: Path):
     render_pdf(doc, str(out))
     assert out.exists()
     assert out.stat().st_size > 100
+
+
+def test_header_uses_public_canvas_page_number():
+    class Canvas:
+        page_number_calls = 0
+        drawn_text = None
+
+        def getPageNumber(self):
+            self.page_number_calls += 1
+            return 3
+
+        def saveState(self):
+            pass
+
+        def setFont(self, _name, _size):
+            pass
+
+        def drawCentredString(self, _x, _y, text):
+            self.drawn_text = text
+
+        def restoreState(self):
+            pass
+
+    class PageDoc:
+        page = 7
+        width = 100
+        height = 200
+        topMargin = 20
+
+    canvas = Canvas()
+    callback = _header_footer_callback(PageDoc(), "Page {page} of {total}")
+    callback(canvas, PageDoc())
+
+    assert canvas.page_number_calls == 1
+    assert canvas.drawn_text == "Page 3 of 7"
 
 
 def test_empty_document_renders(tmp_path: Path):
