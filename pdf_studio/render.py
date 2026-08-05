@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import warnings
 from pathlib import Path
 from threading import Lock
@@ -105,7 +106,13 @@ def _parse_color(hex_str: str) -> "Color":
     """Parse a hex colour string like '#1a1a1a' into a ReportLab Color object."""
     from reportlab.lib.colors import HexColor
 
-    return HexColor(hex_str)
+    if re.fullmatch(r"#[0-9a-fA-F]{6}", hex_str) is None:
+        raise ValueError(f"Invalid hex color: {hex_str!r}")
+
+    try:
+        return HexColor(hex_str)
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid hex color: {hex_str!r}") from exc
 
 
 def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None):
