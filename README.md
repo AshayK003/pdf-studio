@@ -130,7 +130,7 @@ doc.render("q3.pdf")
 
 One call — structured data → fully styled PDF (theme, KPIs, donut chart, table). The template registry is extensible for your own report types.
 
-## API
+## API Reference
 
 ### `Document`
 
@@ -176,9 +176,26 @@ All chart methods accept the document's theme automatically.
 |---|---|---|
 | `family` | `"Inter"` | One of bundled fonts or your own TTF name |
 | `size` | `11` | Point size |
-| `bold` | `False` | Style flag (uses regular weight in v0.1.0) |
-| `italic` | `False` | Style flag (uses regular weight in v0.1.0) |
+| `bold` | `False` | Style flag |
+| `italic` | `False` | Style flag |
 | `color` | `"#1a1a1a"` | Hex color string |
+
+### `Theme`
+
+| Field | Default | Description |
+|---|---|---|
+| `name` | `"cypher"` | Preset name: `cypher`, `ledger`, `slate` |
+| `foundation` | `"#0B1121"` | Deep structural colour (headings, table header) |
+| `surface` | `"#F8FAFC"` | Light card / zebra background |
+| `body_text` | `"#1F2937"` | Paragraph text |
+| `muted_text` | `"#64748B"` | Captions, KPI labels, axis ticks |
+| `accent` | `"#2DD4BF"` | Single confident highlight (fills, rules, bullets — not text) |
+| `good` / `bad` | `"#047857"` / `"#B91C1C"` | Semantic delta colours (KPI up/down) |
+| `grid` | `"#E2E8F0"` | Chart gridlines and table borders |
+| `series` | `[...]` | Ordered chart series palette |
+| `h0` / `h1` / `h2` | — | Heading colours by level |
+
+Use `Theme.get("cypher")`, `Theme.get("ledger")`, `Theme.get("slate")`, or pass a custom `Theme` object to `Document(theme=...)`.
 
 ## Bundled Fonts
 
@@ -243,7 +260,7 @@ pytest --cov=pdf_studio
 pytest tests/test_render.py -v
 ```
 
-Tests use pytest with standard Python temp directories. No external services, no network calls, no fixtures beyond what `pytest` provides. 12 tests, ~2.5s runtime.
+Tests use pytest with standard Python temp directories. No external services, no network calls, no fixtures beyond what `pytest` provides. 39 tests, ~2.5s runtime.
 
 ## Troubleshooting
 

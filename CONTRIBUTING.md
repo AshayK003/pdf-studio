@@ -17,7 +17,7 @@ Verify everything works:
 
 ```bash
 python _demo.py              # generates example.pdf
-pytest                        # 22 tests, all pass
+pytest                        # 39 tests, all pass
 ```
 
 ## Development Workflow
@@ -33,11 +33,11 @@ pytest                        # 22 tests, all pass
 
 Check [open issues](https://github.com/AshayK003/pdf-studio/issues) for planned work. Good first contributions:
 
-- Add pytest test suite (see issue #1)
-- Fix chart scaling bug (see issue #2)
-- Fix table column widths (see issue #3)
-- Add support for custom fonts
-- Add page numbering options
+- Add new chart types (area chart, scatter plot)
+- Improve table column width auto-sizing
+- Add support for custom themes via JSON/YAML
+- Add page numbering options (roman, alphabetic)
+- Extend template registry with new report types
 
 ## Code Conventions
 
@@ -47,12 +47,16 @@ Check [open issues](https://github.com/AshayK003/pdf-studio/issues) for planned 
 - Keep imports sorted: stdlib, third-party, local
 - Type hints are encouraged but not required
 - Document public API methods with docstrings
+- Max line length: 100 characters
 
 ### Architecture
 
 - `Document` class is the main entry point
 - `Style` and `Font` dataclasses configure appearance
+- `Theme` dataclass provides complete visual language
 - `render.py` handles ReportLab PDF generation
+- `visuals.py` provides pre-styled chart builders
+- `templates.py` manages declarative report templates
 - Bundled fonts live in `pdf_studio/fonts/`
 
 ### Testing
@@ -61,6 +65,7 @@ Check [open issues](https://github.com/AshayK003/pdf-studio/issues) for planned 
 - Name tests `test_<module>.py`
 - Use `pytest` fixtures
 - Write behavior-focused tests, not implementation tests
+- Aim for >90% coverage on new code
 
 ## Commit Messages
 
@@ -73,12 +78,15 @@ update table column width calculation
 add support for custom TTF fonts
 ```
 
+**Never** include internal tooling references (ponytail, karpathy, hermes, aeos, vibe.cod, engineering_memory, etc.) in commit messages or public files.
+
 ## Pull Requests
 
 - Keep PRs focused — one change per PR (target ≤200 lines changed)
 - Include a description of what changed and why
 - Reference related issues
 - Small PRs get reviewed and merged faster. Split large features into sequential PRs.
+- CI must pass (all 39 tests, lint, format check)
 
 ## Troubleshooting
 
@@ -90,15 +98,15 @@ If a font's bold or italic style appears the same as the regular style, the font
 
 **Fix:** Register a font that has the weight you need. For bundled fonts:
 
-- **Inter** (bundled) — only Regular is bundled
-- **Lora** (bundled) — only Regular is bundled
-- **JetBrains Mono** (bundled) — only Regular is bundled
+- **Inter** — Regular, Bold bundled
+- **Lora** — Regular, Bold, Italic bundled
+- **JetBrains Mono** — Regular, Bold bundled
 
 Example:
 
 ```python
 from pdf_studio import Font
-bold_font = Font("Inter", size=12, bold=True)  # works if a bold variant of Inter is registered
+bold_font = Font("Inter", size=12, bold=True)  # works because Inter-Bold is registered
 ```
 
 For custom fonts, verify the TTF/OTF file includes the `bold` and `italic` tables (check with `fc-query` or font book).
