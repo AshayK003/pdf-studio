@@ -294,3 +294,10 @@ High-level principles:
 ## License
 
 AGPL v3 — see [LICENSE](LICENSE). Free to use, share, and modify. If you build a closed-source application on top of it, you must release your changes under AGPL as well.
+
+---
+
+<p align="center">
+  <b>Built with ☕ by <a href="https://www.chai4.me/ashaykushwaha003">Ashay Kushwaha</a></b><br>
+  <i>Stop writing boilerplate. Start shipping PDFs.</i>
+</p>
