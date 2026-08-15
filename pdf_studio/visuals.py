@@ -104,8 +104,13 @@ def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
         pctdistance=0.68,  # move % labels closer to center
         wedgeprops=dict(width=0.38, edgecolor="white", linewidth=2),
     )
-    for t in autotexts:
-        t.set_color("white")
+    # Adaptive % label color: white on dark slices, dark on light slices
+    for t, wedge_color in zip(autotexts, colors):
+        # Compute luminance of slice color
+        wc = wedge_color.lstrip('#')
+        r, g, b = int(wc[0:2], 16)/255, int(wc[2:4], 16)/255, int(wc[4:6], 16)/255
+        lum = 0.2126*r + 0.7152*g + 0.0722*b
+        t.set_color("white" if lum < 0.5 else "#1a1a1a")
         t.set_fontsize(9)
         t.set_fontweight("bold")
     # Legend inside the donut hole (center) instead of outside
