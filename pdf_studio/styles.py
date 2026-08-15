@@ -9,7 +9,8 @@ class Font:
 
     family: Inter, Lora, or JetBrains Mono (bundled). Supply your own TTF name too.
     size: point size.
-    bold, italic: style flags.
+    bold, italic: style flags. Real Bold/Italic TTFs are bundled for Inter, Lora,
+        and JetBrains Mono — these render actual weight/style, not the regular font.
     color: hex string like "#1a1a1a".
     """
 

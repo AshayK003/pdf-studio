@@ -6,12 +6,17 @@ from threading import Lock
 
 from .styles import Style, Font
 
-# Bundled font name→filename mapping. Add new fonts here when bundled.
-# Add new fonts here when bundled.
-_BUILTIN_FONTS: dict[str, str] = {
-    "Inter": "Inter-Regular.ttf",
-    "Lora": "Lora-Regular.ttf",
-    "JetBrainsMono": "JetBrainsMono-Regular.ttf",
+# Bundled font name → (filename, bold, italic). Registering each weight/style
+# as its own named font lets us resolve bold/italic to a real TTF instead of
+# silently rendering regular weight. Add new fonts here when bundled.
+_BUILTIN_FONTS: dict[str, tuple[str, bool, bool]] = {
+    "Inter": ("Inter-Regular.ttf", False, False),
+    "Inter-Bold": ("Inter-Bold.ttf", True, False),
+    "Lora": ("Lora-Regular.ttf", False, False),
+    "Lora-Bold": ("Lora-Bold.ttf", True, False),
+    "Lora-Italic": ("Lora-Italic.ttf", False, True),
+    "JetBrainsMono": ("JetBrainsMono-Regular.ttf", False, False),
+    "JetBrainsMono-Bold": ("JetBrainsMono-Bold.ttf", True, False),
 }
 
 _FONTS_REGISTERED = False  # global flag for one-time font registration
@@ -33,18 +38,44 @@ def _register_fonts() -> None:
 
         fonts_dir = Path(__file__).parent / "fonts"
 
-        for family, filename in _BUILTIN_FONTS.items():
+        for registered_name, (filename, _bold, _italic) in _BUILTIN_FONTS.items():
             ttf_path = fonts_dir / filename
             if not ttf_path.exists():
                 continue
-            # Register regular variant under the family name
-            font = TTFont(family, str(ttf_path))
-            pdfmetrics.registerFont(font)
-            # Tell ps2tt about this font family
-            addMapping(family, 0, 0, family)  # normal
-            addMapping(family, 1, 0, family)  # bold (same font for now)
+            pdfmetrics.registerFont(TTFont(registered_name, str(ttf_path)))
+
+        # Map family + weight/style combos so inline <b>/<i> tags resolve.
+        addMapping("Inter", 0, 0, "Inter")
+        addMapping("Inter", 1, 0, "Inter-Bold")
+        addMapping("Inter", 0, 1, "Inter")
+        addMapping("Inter", 1, 1, "Inter-Bold")
+        addMapping("Lora", 0, 0, "Lora")
+        addMapping("Lora", 1, 0, "Lora-Bold")
+        addMapping("Lora", 0, 1, "Lora-Italic")
+        addMapping("Lora", 1, 1, "Lora-Bold")
+        addMapping("JetBrainsMono", 0, 0, "JetBrainsMono")
+        addMapping("JetBrainsMono", 1, 0, "JetBrainsMono-Bold")
+        addMapping("JetBrainsMono", 0, 1, "JetBrainsMono")
+        addMapping("JetBrainsMono", 1, 1, "JetBrainsMono-Bold")
 
         _FONTS_REGISTERED = True
+
+
+def _resolve_font_name(family: str, bold: bool, italic: bool) -> str:
+    """Map a base family + style flags to a registered font name."""
+    fam = family or "Inter"
+    if fam == "Inter":
+        return "Inter-Bold" if bold else "Inter"
+    if fam == "Lora":
+        # No bundled Lora-BoldItalic; bold wins over italic.
+        if bold:
+            return "Lora-Bold"
+        if italic:
+            return "Lora-Italic"
+        return "Lora"
+    if fam == "JetBrainsMono":
+        return "JetBrainsMono-Bold" if bold else "JetBrainsMono"
+    return fam  # caller-supplied custom TTF name
 
 
 def _to_reportlab_style(style: Style) -> "ParagraphStyle":
@@ -59,16 +90,8 @@ def _to_reportlab_style(style: Style) -> "ParagraphStyle":
         "justify": TA_JUSTIFY,
     }
     font = style.font or Font()
-    # v0.1.0 bundles Regular variants only. bold/italic use same
-    # regular font. Add variant TTF files when someone needs real bold/italic.
-    if font.bold or font.italic:
-        warnings.warn(
-            "pdf-studio v0.1.0 bundles Regular font weights only. "
-            "Bold and italic flags are ignored until variant TTF files are bundled.",
-            UserWarning,
-            stacklevel=2,
-        )
-    font_name = font.family
+    # Real bold/italic weights are bundled; resolve to the right TTF.
+    font_name = _resolve_font_name(font.family, font.bold, font.italic)
 
     return ParagraphStyle(
         "UserStyle",
@@ -82,22 +105,33 @@ def _to_reportlab_style(style: Style) -> "ParagraphStyle":
     )
 
 
-def _heading_style(level: int) -> "ParagraphStyle":
-    """Return a ReportLab ParagraphStyle sized by heading level."""
+def _heading_style(level: int, theme) -> "ParagraphStyle":
+    """Return a ReportLab ParagraphStyle sized by heading level.
+
+    Brand display hierarchy: Lora Bold with a navy palette and tight leading.
+    Colours come from the active Theme. Levels 1–2 get a teal hairline rule
+    (added in _build_story).
+    """
     from reportlab.lib.colors import HexColor
     from reportlab.lib.styles import ParagraphStyle
 
-    sizes = {0: 24, 1: 18, 2: 14}
-    font_name = "Inter"
+    sizes = {0: 24, 1: 18, 2: 14, 3: 12}
+    colors_by_level = {
+        0: theme.h0,
+        1: theme.h1,
+        2: theme.h2,
+        3: theme.body_text,
+    }
     size = sizes.get(level, 12)
+    color = colors_by_level.get(level, theme.body_text)
     return ParagraphStyle(
         f"Heading{level}",
-        fontName=font_name,
+        fontName="Lora-Bold",
         fontSize=size,
-        leading=size * 1.2,
-        spaceBefore=14,
-        spaceAfter=14,
-        textColor=HexColor("#1a1a1a"),
+        leading=size * 1.15,
+        spaceBefore=16 if level else 4,
+        spaceAfter=10,
+        textColor=HexColor(color),
     )
 
 
@@ -108,11 +142,18 @@ def _parse_color(hex_str: str) -> "Color":
     return HexColor(hex_str)
 
 
-def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None):
-    """Convert data (DataFrame or list[list]) into a ReportLab Table flowable."""
+def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None, theme=None):
+    """Convert data (DataFrame or list[list]) into a ReportLab Table flowable.
+
+    Cell text is wrapped in Paragraphs so long content wraps instead of
+    overflowing or clipping the cell. Header row uses the theme foundation with
+    an accent rule; body rows use zebra striping in the theme surface.
+    """
     from reportlab.lib import colors
     from reportlab.lib.units import inch
-    from reportlab.platypus import Table, TableStyle, Paragraph
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_LEFT, TA_RIGHT
+    from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
 
     # duck-type DataFrame without importing pandas
     if hasattr(data, "iloc"):
@@ -122,38 +163,53 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
 
     # data is now list[list]
     if not data:
-        from reportlab.platypus import Spacer
-
         return Spacer(1, 6)
 
-    # Smart column widths: proportional to content
     col_count = max(len(row) for row in data) if data else 0
     available = 6.3 * inch  # A4 minus 1in margins ≈ 6.3in
-    if col_count > 0:
-        col_width = available / col_count
-        col_widths = [col_width] * col_count
-    else:
-        col_widths = None
+    col_widths = [available / col_count] * col_count if col_count else None
 
-    t = Table(
-        data,
-        colWidths=col_widths,
-        repeatRows=1,  # repeat header on page split
+    header_style = ParagraphStyle(
+        "TH",
+        fontName="Inter-Bold",
+        fontSize=9,
+        leading=11,
+        textColor=colors.white,
+        alignment=TA_LEFT,
     )
+    body_style = ParagraphStyle(
+        "TD",
+        fontName="Inter",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor(theme.body_text),
+        alignment=TA_LEFT,
+    )
+    body_right = ParagraphStyle("TD-R", parent=body_style, alignment=TA_RIGHT)
 
-    # Build alternating-row style
+    def make_cell(text, row_idx, col_idx):
+        if row_idx == 0:
+            return Paragraph(str(text), header_style)
+        if right_align_cols and col_idx in right_align_cols:
+            return Paragraph(str(text), body_right)
+        return Paragraph(str(text), body_style)
+
+    wrapped = [
+        [make_cell(cell, r, c) for c, cell in enumerate(row)]
+        for r, row in enumerate(data)
+    ]
+
+    t = Table(wrapped, colWidths=col_widths, repeatRows=1)
+
     style_cmds = [
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("FONTNAME", (0, 0), (-1, 0), "Inter"),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2d2d2d")),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(theme.foundation)),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("LINEBELOW", (0, 0), (-1, 0), 1.2, colors.HexColor(theme.accent)),
+        ("GRID", (0, 1), (-1, -1), 0.5, colors.HexColor(theme.grid)),
     ]
     # Right-align specified numeric columns (data rows only)
     if right_align_cols:
@@ -161,17 +217,85 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
             style_cmds.append(("ALIGN", (col_idx, 1), (col_idx, -1), "RIGHT"))
     # Alternating row colors (skip header row)
     for i in range(1, len(data)):
-        bg = colors.HexColor("#f5f5f5") if i % 2 == 0 else colors.white
+        bg = colors.HexColor(theme.surface) if i % 2 == 0 else colors.white
         style_cmds.append(("BACKGROUND", (0, i), (-1, i), bg))
 
     t.setStyle(TableStyle(style_cmds))
 
     if caption:
-        from reportlab.platypus import Paragraph as P, Spacer
+        cap_style = _to_reportlab_style(
+            Style(
+                font=Font("Inter", 9, italic=True, color=theme.muted_text),
+                space_before=10,
+                space_after=6,
+                alignment="center",
+            )
+        )
+        return [Paragraph(caption, cap_style), t]
 
-        cap_style = _to_reportlab_style(Style(font=Font("Inter", 9, italic=True), space_before=12, space_after=4))
-        return [P(caption, cap_style), t]
+    return t
 
+
+def _build_kpi_row(cards: list[dict], theme=None):
+    """Render a row of KPI summary cards as a styled table.
+
+    Each card: {"label": str, "value": str, "delta": str (optional, green/red)}.
+    A multi-column table keeps text vector-crisp at any zoom (unlike rasterized
+    chart labels). Returns a Table flowable.
+    """
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+
+    if not cards:
+        return Spacer(1, 6)
+
+    label_style = ParagraphStyle(
+        "KPIL", fontName="Inter", fontSize=8, leading=10,
+        textColor=colors.HexColor(theme.muted_text), alignment=1,
+    )
+    value_style = ParagraphStyle(
+        "KPIV", fontName="Inter-Bold", fontSize=18, leading=20,
+        textColor=colors.HexColor(theme.foundation), alignment=1,
+    )
+    delta_style_up = ParagraphStyle(
+        "KPIDU", fontName="Inter-Bold", fontSize=8, leading=10,
+        textColor=colors.HexColor(theme.good), alignment=1,
+    )
+    delta_style_down = ParagraphStyle(
+        "KPIDD", fontName="Inter-Bold", fontSize=8, leading=10,
+        textColor=colors.HexColor(theme.bad), alignment=1,
+    )
+
+    rows = []
+    for c in cards:
+        label = Paragraph(str(c.get("label", "")), label_style)
+        value = Paragraph(str(c.get("value", "")), value_style)
+        delta = c.get("delta")
+        if delta is None:
+            delta_cell = Paragraph("", label_style)
+        elif str(delta).startswith("-"):
+            delta_cell = Paragraph(str(delta), delta_style_down)
+        else:
+            delta_cell = Paragraph(str(delta), delta_style_up)
+        rows.append([label, value, delta_cell])
+
+    # transpose: each card becomes a column of [label, value, delta]
+    data = list(map(list, zip(*rows)))
+    n = len(cards)
+    col_widths = [6.3 * inch / n] * n
+
+    t = Table(data, colWidths=col_widths)
+    style_cmds = [
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(theme.surface)),
+        ("LINEBEFORE", (1, 0), (-1, -1), 0.5, colors.HexColor(theme.grid)),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor(theme.grid)),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]
+    t.setStyle(TableStyle(style_cmds))
     return t
 
 
@@ -211,12 +335,49 @@ def _build_chart(
     orig_width = drawing.width
     orig_height = drawing.height
 
+    # Tall/square figures (donut, heatmap) look bloated at full width and
+    # refuse to pack two-per-page. Cap their rendered width so they stay
+    # proportional and leave room for a neighbour. Wide figures keep full width.
+    AVAILABLE = 6.3 * 72
+    if width > AVAILABLE:
+        width = AVAILABLE
+    if aspect < 1.3 and width > 4.6 * 72:
+        width = 4.6 * 72
+
     drawing.width = width
     drawing.height = height
     if orig_width and orig_height:
         drawing.scale(width / orig_width, height / orig_height)
 
-    return drawing
+        # Centre charts narrower than the content frame so they read as
+        # intentional rather than leaving a gap on the right.
+        if drawing is not None:
+            drawing.hAlign = "CENTER"
+
+        return drawing
+
+
+def _build_chart_row(figures: list, space_after: float = 0):
+    """Lay out up to two charts in a single row to conserve vertical space."""
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Table, TableStyle, Spacer
+
+    if not figures:
+        return Spacer(1, 6)
+    cells = []
+    for fig in figures[:2]:
+        item = _build_chart(fig, width=(6.3 * 72) / len(figures[:2]), close_figure=True)
+        if item is not None:
+            cells.append(item)
+    if not cells:
+        return Spacer(1, 6)
+    if len(cells) == 1:
+        return cells[0]
+    row = Table([[cells[0], cells[1]]], colWidths=[3.05 * inch, 3.05 * inch])
+    row.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                             ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                             ("RIGHTPADDING", (0, 0), (-1, -1), 6)]))
+    return row
 
 
 def _header_footer_callback(doc, header_text: str | None):
@@ -239,10 +400,10 @@ def _header_footer_callback(doc, header_text: str | None):
 def _build_story(pdf_doc) -> list:
     """Build the list of ReportLab flowables from document elements."""
     from reportlab.platypus import Paragraph, PageBreak, Spacer
-    from reportlab.platypus import ListFlowable, ListItem
+    from reportlab.platypus import ListFlowable, ListItem, HRFlowable
     from reportlab.lib import colors
-    from reportlab.lib.styles import ParagraphStyle
 
+    theme = pdf_doc.theme
     story = []
     for el in pdf_doc._elements:
         etype = el[0]
@@ -257,32 +418,55 @@ def _build_story(pdf_doc) -> list:
                     story.append(Spacer(1, space_after))
         elif etype == "heading":
             _, text, level = el
-            story.append(Paragraph(str(text), _heading_style(level)))
+            story.append(Paragraph(str(text), _heading_style(level, theme)))
+            # Hairline rule under section headings (h1/h2)
+            if level in (1, 2):
+                story.append(
+                    HRFlowable(
+                        width="100%",
+                        thickness=0.6,
+                        color=colors.HexColor(theme.accent),
+                        spaceBefore=0,
+                        spaceAfter=10,
+                    )
+                )
         elif etype == "paragraph":
             _, text, style = el
             story.append(Paragraph(text, _to_reportlab_style(style)))
         elif etype == "table":
             _, data, caption, right_align_cols = el
-            item = _build_table(data, caption, right_align_cols)
+            item = _build_table(data, caption, right_align_cols, theme)
             if isinstance(item, list):
                 story.extend(item)
             else:
                 story.append(item)
         elif etype == "page_break":
             story.append(PageBreak())
+        elif etype == "chart_row":
+            _, figures, space_after = el
+            item = _build_chart_row(figures, space_after)
+            if space_after:
+                story.append(Spacer(1, space_after))
+            if item is not None:
+                story.append(item)
+        elif etype == "kpi_row":
+            _, cards = el
+            story.append(_build_kpi_row(cards, theme))
         elif etype == "bullet":
             _, text, style = el
             rs = _to_reportlab_style(style)
             p = Paragraph(text, rs)
-            story.append(ListFlowable(
-                [ListItem(p, bulletColor=colors.HexColor("#1a1a1a"))],
-                bulletType="bullet",
-                start=None,
-                bulletFontSize=rs.fontSize * 0.7,
-                leftIndent=14,
-                spaceBefore=3,
-                spaceAfter=3,
-            ))
+            story.append(
+                ListFlowable(
+                    [ListItem(p, bulletColor=colors.HexColor(theme.accent))],
+                    bulletType="bullet",
+                    bulletColor=colors.HexColor(theme.accent),
+                    bulletFontSize=rs.fontSize * 0.7,
+                    leftIndent=14,
+                    spaceBefore=3,
+                    spaceAfter=3,
+                )
+            )
     return story
 
 

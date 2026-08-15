@@ -12,7 +12,13 @@ from reportlab.platypus import Spacer
 
 import pdf_studio.render as render_module
 from pdf_studio.document import Document
-from pdf_studio.render import _build_table, _to_reportlab_style, render_pdf
+from pdf_studio.render import (
+    _build_table,
+    _heading_style,
+    _to_reportlab_style,
+    render_pdf,
+)
+from pdf_studio.themes import Theme
 from pdf_studio.styles import Font, Style
 
 
@@ -47,7 +53,7 @@ def test_empty_document_renders(tmp_path: Path):
 
 
 def test_table_empty_data_returns_spacer():
-    result = _build_table([], caption=None)
+    result = _build_table([], caption=None, theme=Theme.cypher())
     assert isinstance(result, Spacer)
 
 
@@ -56,6 +62,7 @@ def test_right_align_column_applies_to_data_rows():
         [["Item", "Amount"], ["One", "10"], ["Two", "20"]],
         caption=None,
         right_align_cols=[1],
+        theme=Theme.cypher(),
     )
 
     assert table._cellStyles[1][1].alignment == "RIGHT"
@@ -68,6 +75,7 @@ def test_right_align_multiple_columns():
         [["Item", "Qty", "Amount"], ["One", "2", "10"], ["Two", "4", "20"]],
         caption=None,
         right_align_cols=[1, 2],
+        theme=Theme.cypher(),
     )
 
     assert table._cellStyles[1][1].alignment == "RIGHT"
@@ -81,6 +89,7 @@ def test_right_align_empty_list_leaves_default_alignment():
         [["Item", "Amount"], ["One", "10"]],
         caption=None,
         right_align_cols=[],
+        theme=Theme.cypher(),
     )
 
     assert table._cellStyles[1][0].alignment == "LEFT"
@@ -124,9 +133,28 @@ def test_chart_can_preserve_figure_after_rendering(tmp_path: Path):
     plt.close(fig)
 
 
-def test_font_style_flags_emit_warning():
-    with pytest.warns(UserWarning, match="Regular font weights only"):
-        _to_reportlab_style(Style(font=Font(bold=True, italic=True)))
+def test_bold_style_resolves_to_bold_font():
+    rl_style = _to_reportlab_style(Style(font=Font("Inter", 11, bold=True)))
+    assert rl_style.fontName == "Inter-Bold"
+
+
+def test_italic_style_resolves_to_italic_font():
+    rl_style = _to_reportlab_style(Style(font=Font("Lora", 12, italic=True)))
+    assert rl_style.fontName == "Lora-Italic"
+
+
+def test_heading_style_uses_brand_colors():
+    from reportlab.lib.colors import Color
+
+    title = _heading_style(0, Theme.cypher())
+    h1 = _heading_style(1, Theme.cypher())
+    h2 = _heading_style(2, Theme.cypher())
+    assert isinstance(title.textColor, Color)
+    assert title.fontSize == 24
+    assert h1.fontName == "Lora-Bold"
+    # h1 navy, h2 darker navy
+    assert h1.textColor.hexval() == "0x1a3c6e"
+    assert h2.textColor.hexval() == "0x16213e"
 
 
 def test_font_registration_is_thread_safe(monkeypatch: pytest.MonkeyPatch):
@@ -138,7 +166,7 @@ def test_font_registration_is_thread_safe(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         render_module,
         "_BUILTIN_FONTS",
-        {"Inter": "Inter-Regular.ttf"},
+        {"Inter": ("Inter-Regular.ttf", False, False)},
     )
     monkeypatch.setattr(ttfonts, "TTFont", lambda family, _path: family)
     monkeypatch.setattr(fonts, "addMapping", lambda *_args: None)
@@ -157,3 +185,29 @@ def test_font_registration_is_thread_safe(monkeypatch: pytest.MonkeyPatch):
         list(executor.map(register_from_thread, range(workers)))
 
     assert registered_fonts == ["Inter"]
+
+
+def test_bullet_renders_teal_marker(tmp_path: Path):
+    from reportlab.platypus import ListFlowable
+
+    render_module._register_fonts()
+    doc = Document()
+    doc.add_bullet("A bullet item", Style(font=Font("Inter", 10)))
+    story = render_module._build_story(doc)
+    bullet = story[0]
+    assert isinstance(bullet, ListFlowable)
+    # Teal bullet color is stored on the ListFlowable as _bulletColor
+    assert bullet._bulletColor is not None
+    assert bullet._bulletColor.hexval() == "0x2dd4bf"
+
+
+def test_table_caption_appears_above_table():
+    from reportlab.platypus import Paragraph, Table
+
+    result = _build_table(
+        [["A", "B"], ["1", "2"]], caption="Table 1: demo", theme=Theme.cypher()
+    )
+    assert isinstance(result, list)
+    assert isinstance(result[0], Paragraph)  # caption
+    assert isinstance(result[1], Table)  # table
+
