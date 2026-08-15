@@ -63,18 +63,18 @@ def build_comprehensive_showcase():
         doc.add_heading(f"{name.title()} Theme", level=1)
         doc.add_paragraph(desc)
         t = doc.theme
-        # Show colour swatches as a tiny table
+        # Show colour swatches as a table with actual color backgrounds
         doc.add_table(
             [
                 ["Role", "Hex", "Preview"],
-                ["foundation", t.foundation, "■"],
-                ["accent (fills)", t.accent, "■"],
-                ["good (up)", t.good, "■"],
-                ["bad (down)", t.bad, "■"],
-                ["surface (cards)", t.surface, "■"],
-                ["body text", t.body_text, "■"],
-                ["muted text", t.muted_text, "■"],
-                ["grid lines", t.grid, "■"],
+                ["foundation", t.foundation, ""],
+                ["accent (fills)", t.accent, ""],
+                ["good (up)", t.good, ""],
+                ["bad (down)", t.bad, ""],
+                ["surface (cards)", t.surface, ""],
+                ["body text", t.body_text, ""],
+                ["muted text", t.muted_text, ""],
+                ["grid lines", t.grid, ""],
             ],
             caption=f"{name} colour roles",
             right_align_cols=[],

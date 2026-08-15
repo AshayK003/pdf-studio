@@ -1,13 +1,4 @@
-"""Pre-styled chart builders for data-analysis PDFs.
-
-Each function returns a matplotlib Figure styled with the pdf-studio brand
-palette (navy + teal) so charts match document typography without the caller
-configuring matplotlib. Built on matplotlib only, no new dependencies.
-
-These are intentionally thin: they wrap a single matplotlib call with brand
-defaults. Compose them with Document.add_chart (or the Document.add_*_chart
-convenience methods) to place them in a PDF.
-"""
+"""Pre-styled chart builders for data-analysis PDFs."""
 
 from __future__ import annotations
 
