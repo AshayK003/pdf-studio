@@ -298,6 +298,5 @@ AGPL v3 — see [LICENSE](LICENSE). Free to use, share, and modify. If you build
 ---
 
 <p align="center">
-  <b>Built with ☕ by <a href="https://www.chai4.me/ashaykushwaha003">Ashay Kushwaha</a></b><br>
-  <i>Stop writing boilerplate. Start shipping PDFs.</i>
+  <a href="https://www.chai4.me/ashaykushwaha003">Support the developer with a chai ☕</a>
 </p>
