@@ -89,10 +89,10 @@ def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
     """Composition donut. Slice colours cycle the theme series palette.
 
     Legend is placed to the right of the donut to avoid overlap.
-    Figure is square so it fits cleanly in a single column or chart_row.
+    Figure is wider (5.2 x 4.2) to accommodate external legend without compression.
     """
     theme = _theme_or(theme)
-    fig, ax = plt.subplots(figsize=(4.2, 4.2), dpi=150)  # square
+    fig, ax = plt.subplots(figsize=(5.2, 4.2), dpi=150)  # wider for external legend
     colors = [theme.series[i % len(theme.series)] for i in range(len(values))]
     wedges, _texts, autotexts = ax.pie(
         values,

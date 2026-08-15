@@ -348,10 +348,9 @@ def _build_chart(
         AVAILABLE = 6.3 * 72
         if width > AVAILABLE:
             width = AVAILABLE
-        # Donut charts are now square (aspect ~1.0). The old logic capped width
-        # at 4.6in for aspect < 1.3, but that made them too small. For square charts,
-        # allow up to 5.5in so they fill the column without excessive side gaps.
-        if aspect >= 0.9 and aspect <= 1.2 and width > 5.5 * 72:
+        # Donut charts are now wider (aspect ~1.24) to accommodate external legend.
+        # Don't cap at 4.6in — allow up to 5.5in for these.
+        if aspect >= 1.1 and aspect <= 1.35 and width > 5.5 * 72:
             width = 5.5 * 72
         elif aspect < 1.3 and width > 4.6 * 72:
             width = 4.6 * 72
