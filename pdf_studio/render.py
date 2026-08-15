@@ -338,30 +338,35 @@ def _build_chart(
         height = width / aspect if aspect else width * 0.6
 
     # Save original SVG dimensions before overwriting — otherwise the scale
-    # factor becomes width/width = 1.0 and charts never resize.
-    orig_width = drawing.width
-    orig_height = drawing.height
+        # factor becomes width/width = 1.0 and charts never resize.
+        orig_width = drawing.width
+        orig_height = drawing.height
 
-    # Tall/square figures (donut, heatmap) look bloated at full width and
-    # refuse to pack two-per-page. Cap their rendered width so they stay
-    # proportional and leave room for a neighbour. Wide figures keep full width.
-    AVAILABLE = 6.3 * 72
-    if width > AVAILABLE:
-        width = AVAILABLE
-    if aspect < 1.3 and width > 4.6 * 72:
-        width = 4.6 * 72
+        # Tall/square figures (donut, heatmap) look bloated at full width and
+        # refuse to pack two-per-page. Cap their rendered width so they stay
+        # proportional and leave room for a neighbour. Wide figures keep full width.
+        AVAILABLE = 6.3 * 72
+        if width > AVAILABLE:
+            width = AVAILABLE
+        # Donut charts are now square (aspect ~1.0). The old logic capped width
+        # at 4.6in for aspect < 1.3, but that made them too small. For square charts,
+        # allow up to 5.5in so they fill the column without excessive side gaps.
+        if aspect >= 0.9 and aspect <= 1.2 and width > 5.5 * 72:
+            width = 5.5 * 72
+        elif aspect < 1.3 and width > 4.6 * 72:
+            width = 4.6 * 72
 
-    drawing.width = width
-    drawing.height = height
-    if orig_width and orig_height:
-        drawing.scale(width / orig_width, height / orig_height)
+        drawing.width = width
+        drawing.height = height
+        if orig_width and orig_height:
+            drawing.scale(width / orig_width, height / orig_height)
 
-        # Centre charts narrower than the content frame so they read as
-        # intentional rather than leaving a gap on the right.
-        if drawing is not None:
-            drawing.hAlign = "CENTER"
+            # Centre charts narrower than the content frame so they read as
+            # intentional rather than leaving a gap on the right.
+            if drawing is not None:
+                drawing.hAlign = "CENTER"
 
-        return drawing
+            return drawing
 
 
 def _build_chart_row(figures: list, space_after: float = 0):
