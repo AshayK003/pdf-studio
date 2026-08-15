@@ -58,7 +58,7 @@ pip install pdf-studio reportlab matplotlib pandas svglib
 ```python
 from pdf_studio import Document
 
-doc = Document()
+doc = Document(theme="ledger")
 doc.set_header("Report | Page {page} of {total}")
 doc.add_heading("Q3 Results", level=0)
 doc.add_paragraph("Revenue grew 12% year-over-year.")
@@ -81,20 +81,82 @@ doc.render("report.pdf")   # ✅ 3 methods, one file
 
 That's it. Three methods and one `render()` call produces a multi-page PDF with a running header, a chart, and a styled table.
 
+## Theme Showcase
+
+pdf-studio ships with three research-backed, WCAG-AA verified themes. One `Theme` object recolors the entire document — headings, tables, charts, KPIs, bullets — without touching your code.
+
+| cypher (default) | ledger (finance) | slate (approachable) |
+|:---:|:---:|:---:|
+| ![cypher](assets/showcase_cypher.png) | ![ledger](assets/showcase_ledger.png) | ![slate](assets/showcase_slate.png) |
+
+**Usage:**
+```python
+from pdf_studio import Document
+
+# Single string — theme applied to everything
+doc = Document(theme="ledger")   # or "cypher", "slate"
+doc.add_heading("Portfolio Statement", level=0)
+doc.add_kpi_row([{"label": "AUM", "value": "₹1.2L", "delta": "+4.1%"}])
+doc.add_table([["Holding", "Value"], ["VEDL", "₹15,600"]])
+doc.render("report.pdf")
+```
+
+Each theme is a complete visual language:
+- **cypher** — navy foundation `#0B1121`, teal accent `#2DD4BF`. The brand default.
+- **ledger** — deep-green foundation `#064E3B`, gold accent `#B45309`. Finance-optimised; green = growth, gold = premium.
+- **slate** — indigo foundation `#312E81`, amber accent `#D97706`. Contemporary, warm, distinct from the navy/teal brand.
+
+All foundations pass WCAG-AA on white (≥4.5:1). Accents are fill/bullet colours only — never used as text.
+
+## Declarative Templates
+
+For recurring reports, skip the builder API entirely:
+
+```python
+from pdf_studio import Document
+
+data = {
+    "title": "Q3 Portfolio",
+    "kpis": [{"label": "AUM", "value": "₹1.2L", "delta": "+4.1%"}],
+    "composition": (["Equity", "Cash"], [70, 30]),
+    "table": [["Holding", "Value"], ["VEDL", "₹15,600"]],
+    "right_align_cols": [1],
+}
+doc = Document.from_template("financial_statement", data)
+doc.render("q3.pdf")
+```
+
+One call — structured data → fully styled PDF (theme, KPIs, donut chart, table). The template registry is extensible for your own report types.
+
 ## API
 
 ### `Document`
 
 | Method | Parameters | Description |
 |---|---|---|
+| `Document(page_size="A4", margins="32pt", theme=None)` | `theme`: `"cypher"` \| `"ledger"` \| `"slate"` \| `Theme` object | Create a document with an optional theme |
 | `add_heading(text, level=0)` | `level`: 0=title, 1=h1, 2=h2 | Add a heading |
 | `add_paragraph(text, style=None)` | `style`: optional `Style` | Add body text |
-| `add_table(data, caption=None)` | `data`: DataFrame or `list[list]` | Add a styled table with alternating rows |
-| `add_chart(figure, width=None, height=None, close_figure=True)` | matplotlib `Figure` | Convert chart to inline vector PDF and release it after rendering |
+| `add_table(data, caption=None, right_align_cols=None)` | `data`: DataFrame or `list[list]` | Add a styled table with alternating rows |
+| `add_chart(figure, width=None, height=None, close_figure=True)` | matplotlib `Figure` | Convert chart to inline vector PDF |
+| `add_chart_row(figures, space_after=6)` | `list[Figure]` | Lay out 2 charts side-by-side |
+| `add_kpi_row(cards)` | `list[dict]` with `label`, `value`, `delta?` | Add a row of KPI summary cards |
 | `add_bullet(text, style=None)` | — | Add a bullet-pointed item |
 | `add_page_break()` | — | Force a new page |
 | `set_header(text)` | supports `{page}` and `{total}` | Running header on every page |
 | `render(path)` | file path | Build the PDF file |
+| `from_template(name, data, **kwargs)` | `name`: template name, `data`: dict | Class method: build document from template |
+
+### Convenience Chart Methods
+
+| Method | Parameters | Description |
+|---|---|---|
+| `add_bar_chart(labels, values, title=None, horizontal=False, space_after=6)` | — | Brand-styled single-series bar chart |
+| `add_line_chart(x, series, title=None, space_after=6)` | `series`: `dict[name -> list[float]]` | Brand-styled multi-series line chart |
+| `add_donut_chart(labels, values, title=None, space_after=6)` | — | Brand-styled composition donut |
+| `add_heatmap(matrix, labels, title=None, diverging=True, space_after=6)` | — | Brand-styled correlation heatmap |
+
+All chart methods accept the document's theme automatically.
 
 ### `Style`
 
@@ -120,11 +182,11 @@ That's it. Three methods and one `render()` call produces a multi-page PDF with 
 
 Three open-source fonts ship with the library — zero system font dependencies:
 
-- **Inter** (sans-serif, body text)
-- **Lora** (serif, headings / long-form reading)
-- **JetBrains Mono** (monospace, code / data)
+- **Inter** (sans-serif, body text) — Regular, Bold
+- **Lora** (serif, headings / long-form reading) — Regular, Bold, Italic
+- **JetBrains Mono** (monospace, code / data) — Regular, Bold
 
-v0.1.0 bundles **Regular** weight only. Bold/italic flags use the same regular font. Add weight-specific `.ttf` files to `pdf_studio/fonts/` and update `_BUILTIN_FONTS` in `render.py` for real bold/italic rendering.
+All weights/styles are real TTF files. `<b>`/`<i>` tags and `Font(bold=True/italic=True)` resolve to the correct weight — no synthetic rendering.
 
 ## Dependencies
 
