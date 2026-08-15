@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Build a document using every public API method
-doc = Document()
+doc = Document(theme="ledger")
 doc.set_header("Demo | Page {page} of {total}")
 doc.add_heading("PDF Studio Demo", level=0)
 doc.add_paragraph("This document proves every API method works.", Style(font=Font("Lora", 11)))
@@ -22,4 +22,4 @@ doc.render("_demo_output.pdf")
 import os
 assert os.path.getsize("_demo_output.pdf") > 1000, "PDF too small — render may have failed"
 os.remove("_demo_output.pdf")
-print("✅ pdf-studio v0.1.0 smoke test passed")
+print("✅ pdf-studio-py v0.1.1 smoke test passed")

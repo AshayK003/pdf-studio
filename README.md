@@ -54,7 +54,7 @@ The document is rendered in **two passes**: the first pass counts pages (for `{t
 ## Quick Start
 
 ```bash
-pip install pdf-studio reportlab matplotlib pandas svglib
+pip install pdf-studio-py reportlab matplotlib pandas svglib
 ```
 
 ```python
@@ -245,8 +245,8 @@ pip install -e ".[dev]"
 ### Verify installation
 
 ```bash
-python _demo.py
-# ✅ pdf-studio v0.1.0 smoke test passed
+python -c "import pdf_studio; print(pdf_studio.__version__)"
+# ✅ pdf-studio-py v0.1.1
 ```
 
 ## Testing
