@@ -89,6 +89,8 @@ pdf-studio ships with three research-backed, WCAG-AA verified themes. One `Theme
 |:---:|:---:|:---:|
 | ![cypher](assets/showcase_cypher.png) | ![ledger](assets/showcase_ledger.png) | ![slate](assets/showcase_slate.png) |
 
+**Full showcase PDF:** [`pdf-studio-showcase.pdf`](assets/pdf-studio-showcase.pdf) — 9 pages, all features across all three themes (tables, charts, KPIs, typography, templates).
+
 **Usage:**
 ```python
 from pdf_studio import Document
