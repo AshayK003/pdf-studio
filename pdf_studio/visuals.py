@@ -88,9 +88,8 @@ def line_chart(x, series, title=None, theme: Optional[Theme] = None):
 def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
     """Composition donut. Slice colours cycle the theme series palette.
 
-    Legend is placed inside the donut hole to avoid clipping during SVG→PDF
-    conversion. Figure is square so it fits cleanly in a single column or
-    chart_row without excessive whitespace.
+    Legend is placed to the right of the donut to avoid overlap.
+    Figure is square so it fits cleanly in a single column or chart_row.
     """
     theme = _theme_or(theme)
     fig, ax = plt.subplots(figsize=(4.2, 4.2), dpi=150)  # square
@@ -106,27 +105,26 @@ def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
     )
     # Adaptive % label color: white on dark slices, dark on light slices
     for t, wedge_color in zip(autotexts, colors):
-        # Compute luminance of slice color
         wc = wedge_color.lstrip('#')
         r, g, b = int(wc[0:2], 16)/255, int(wc[2:4], 16)/255, int(wc[4:6], 16)/255
         lum = 0.2126*r + 0.7152*g + 0.0722*b
         t.set_color("white" if lum < 0.5 else "#1a1a1a")
         t.set_fontsize(9)
         t.set_fontweight("bold")
-    # Legend inside the donut hole (center) instead of outside
+    # Legend OUTSIDE to the right (not inside the donut hole)
     ax.legend(
         wedges,
         labels,
         frameon=False,
         fontsize=8,
         labelcolor=theme.muted_text,
-        loc="center",
-        bbox_to_anchor=(0.5, 0.5),
+        loc="center left",
+        bbox_to_anchor=(1.05, 0.5),  # outside right
     )
     if title:
         ax.set_title(title, color=theme.foundation, fontsize=12, fontweight="bold", pad=12)
     fig.patch.set_facecolor("white")
-    fig.tight_layout(pad=0.5)  # minimal padding
+    fig.tight_layout(pad=0.5)
     return fig
 
 
