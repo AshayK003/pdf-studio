@@ -525,20 +525,22 @@ def render_pdf(pdf_doc, path: str) -> None:
         bottomMargin=margin_pts,
     )
 
-    # First pass: build story and count pages
-    from io import BytesIO
-
-    buf = BytesIO()
-    tmp_template = SimpleDocTemplate(buf, **template_kw)
-    tmp_template.build(_build_story(pdf_doc))
-    total_pages = tmp_template.page if hasattr(tmp_template, "page") else 1
-    buf.close()
-
-    # Second pass: resolve {total} header and render to real path
     header_text = pdf_doc._header
-    if header_text and "{total}" in header_text:
+    needs_total = header_text and "{total}" in header_text
+
+    if needs_total:
+        # First pass: build story and count pages
+        from io import BytesIO
+
+        buf = BytesIO()
+        tmp_template = SimpleDocTemplate(buf, **template_kw)
+        tmp_template.build(_build_story(pdf_doc))
+        total_pages = tmp_template.page if hasattr(tmp_template, "page") else 1
+        buf.close()
+
         header_text = header_text.replace("{total}", str(total_pages))
 
+    # Second pass: resolve {total} header and render to real path
     doc_template = SimpleDocTemplate(path, **template_kw)
     doc_template.build(
         _build_story(pdf_doc),
