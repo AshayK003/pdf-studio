@@ -11,7 +11,8 @@
 
 <p align="center">
   <a href="https://github.com/AshayK003/pdf-studio/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
-  <a href="https://pypi.org/project/pdf-studio/"><img src="https://img.shields.io/badge/python-≥3.10-blue" alt="Python ≥3.10"></a>
+  <a href="https://pypi.org/project/pdf-studio-py/"><img src="https://img.shields.io/pypi/v/pdf-studio-py.svg" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/pdf-studio-py/"><img src="https://img.shields.io/badge/python-≥3.10-blue" alt="Python ≥3.10"></a>
   <a href="https://github.com/AshayK003/pdf-studio/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build"></a>
   <a href="https://www.chai4.me/ashaykushwaha003"><img src="https://img.shields.io/badge/chat-chai4.me-FF6B35?logo=discord&logoColor=white" alt="Developer Support"></a>
 </p>

@@ -3,8 +3,8 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pdf-studio"
-version = "0.1.0"
+name = "pdf-studio-py"
+version = "0.1.1"
 description = "Three lines of code for a PDF with a table, a chart, and a header."
 readme = "README.md"
 license = {text = "AGPL-3.0-only"}
