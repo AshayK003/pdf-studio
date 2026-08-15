@@ -3,6 +3,8 @@ from __future__ import annotations
 from .styles import Style, _default_style
 from .themes import Theme
 
+__version__ = "0.1.0"
+
 
 class Document:
     """A PDF document under construction.

@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pdf-studio"
 version = "0.1.0"
 description = "Three lines of code for a PDF with a table, a chart, and a header."
+readme = "README.md"
 license = {text = "AGPL-3.0-only"}
 requires-python = ">=3.10"
 dependencies = ["reportlab>=4"]
@@ -17,8 +18,14 @@ classifiers = [
     "Topic :: Printing",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff", "matplotlib", "pandas", "svglib"]
+
 [project.urls]
 Homepage = "https://github.com/AshayK003/pdf-studio"
+Repository = "https://github.com/AshayK003/pdf-studio"
+Issues = "https://github.com/AshayK003/pdf-studio/issues"
+Documentation = "https://github.com/AshayK003/pdf-studio/blob/master/README.md"
 
 [tool.setuptools.packages.find]
 include = ["pdf_studio*"]
