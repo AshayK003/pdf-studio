@@ -5,6 +5,14 @@ from .themes import Theme
 
 __version__ = "0.1.0"
 
+# Verify chart dependencies at import time
+try:
+    from .render import _build_chart
+    _CHART_AVAILABLE = True
+except ImportError:
+    _CHART_AVAILABLE = False
+    _CHART_ERROR = None
+
 
 class Document:
     """A PDF document under construction.
@@ -33,14 +41,30 @@ class Document:
 
     def add_heading(self, text: str, level: int = 0) -> None:
         """Add a heading. level=0 → title, level=1 → h1, level=2 → h2."""
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("Heading text must be a non-empty string")
+        if not isinstance(level, int) or level < 0 or level > 3:
+            raise ValueError("Heading level must be an integer 0-3")
         self._elements.append(("heading", text, level))
 
     def add_paragraph(self, text: str, style: Style | None = None) -> None:
         """Add a body paragraph with optional Style."""
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("Paragraph text must be a non-empty string")
         self._elements.append(("paragraph", text, style or _default_style()))
 
     def add_table(self, data, caption: str | None = None, right_align_cols: list[int] | None = None) -> None:
         """Add a table. Accepts pandas DataFrame or list[list]."""
+        if data is None:
+            raise ValueError("Table data cannot be None")
+        # Check for list[list] or DataFrame-like
+        if not hasattr(data, "__iter__") or isinstance(data, (str, bytes)):
+            raise ValueError("Table data must be a list of lists or pandas DataFrame")
+        if caption is not None and not isinstance(caption, str):
+            raise ValueError("Caption must be a string or None")
+        if right_align_cols is not None:
+            if not isinstance(right_align_cols, list) or not all(isinstance(i, int) for i in right_align_cols):
+                raise ValueError("right_align_cols must be a list of integers or None")
         self._elements.append(("table", data, caption, right_align_cols))
 
     def add_chart(
@@ -57,7 +81,15 @@ class Document:
         space_before / space_after: vertical spacing in points around the chart.
         close_figure: release the figure after rendering. Set to False when the
             caller needs to reuse the figure after rendering the document.
+        
+        Raises:
+            RuntimeError: If svglib is not installed (required for chart rendering).
         """
+        if not _CHART_AVAILABLE:
+            raise RuntimeError(
+                "Chart rendering requires 'svglib'. Install with: pip install svglib"
+            )
+        
         self._elements.append(
             ("chart", figure, width, height, space_before, space_after, close_figure)
         )
