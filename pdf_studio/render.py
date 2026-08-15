@@ -155,7 +155,7 @@ def _parse_color(hex_str: str) -> "Color":
         raise ValueError(f"Invalid hex color: {hex_str!r}") from exc
 
 
-def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None, theme=None):
+def _build_table(data, caption: str | None, right_align_cols: list[int] | None = None, theme=None, available_width=None):
     """Convert data (DataFrame or list[list]) into a ReportLab Table flowable.
 
     Cell text is wrapped in Paragraphs so long content wraps instead of
@@ -179,7 +179,10 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
         return Spacer(1, 6)
 
     col_count = max(len(row) for row in data) if data else 0
-    available = 6.3 * inch  # A4 minus 1in margins ≈ 6.3in
+    if available_width is None:
+        available = 6.3 * inch  # A4 minus 1in margins ≈ 6.3in
+    else:
+        available = available_width
     col_widths = [available / col_count] * col_count if col_count else None
 
     header_style = ParagraphStyle(
@@ -462,12 +465,25 @@ def _build_story(pdf_doc) -> list:
             _, text, style = el
             story.append(Paragraph(text, _to_reportlab_style(style)))
         elif etype == "table":
-            _, data, caption, right_align_cols = el
-            item = _build_table(data, caption, right_align_cols, theme)
-            if isinstance(item, list):
-                story.extend(item)
-            else:
-                story.append(item)
+                    _, data, caption, right_align_cols = el
+                    # Calculate available width based on page size and margins
+                    from reportlab.lib.pagesizes import A4, letter
+                    from reportlab.lib.units import inch
+                    page_size_map = {"A4": A4, "letter": letter}
+                    ps = page_size_map.get(pdf_doc._page_size, A4)
+                    margins = pdf_doc._margins
+                    if isinstance(margins, str) and margins.endswith("in"):
+                        margin_pts = float(margins.replace("in", "")) * inch
+                    elif isinstance(margins, str) and margins.endswith("pt"):
+                        margin_pts = float(margins.replace("pt", ""))
+                    else:
+                        margin_pts = inch
+                    available_width = ps[0] - 2 * margin_pts
+                    item = _build_table(data, caption, right_align_cols, theme, available_width)
+                    if isinstance(item, list):
+                        story.extend(item)
+                    else:
+                        story.append(item)
         elif etype == "page_break":
             story.append(PageBreak())
         elif etype == "chart_row":
