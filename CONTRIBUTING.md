@@ -78,7 +78,7 @@ update table column width calculation
 add support for custom TTF fonts
 ```
 
-**Never** include internal tooling references (ponytail, karpathy, hermes, aeos, vibe.cod, engineering_memory, etc.) in commit messages or public files.
+**Never** include internal tooling or workflow references in commit messages or public files.
 
 ## Pull Requests
 
