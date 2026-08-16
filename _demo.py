@@ -1,7 +1,8 @@
 """Smoke test — generates a PDF with every API method. Run with: python _demo.py"""
-from pdf_studio import Document, Style, Font
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from pdf_studio import Document, Font, Style
 
 # Build a document using every public API method
 doc = Document(theme="ledger")
@@ -20,6 +21,7 @@ doc.render("_demo_output.pdf")
 
 # Self-check
 import os
+
 assert os.path.getsize("_demo_output.pdf") > 1000, "PDF too small — render may have failed"
 os.remove("_demo_output.pdf")
 print("✅ pdf-studio-py v0.1.1 smoke test passed")

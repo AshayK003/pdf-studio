@@ -34,3 +34,21 @@ include = ["pdf_studio*"]
 
 [tool.setuptools.package-data]
 pdf_studio = ["fonts/*.ttf"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+# Enforce error-catching rules. Style modernizations (UP/RUF/SIM/etc.) are
+# intentionally ignored so CI flags real bugs, not formatting preferences.
+select = ["E", "F", "C90"]
+ignore = ["E501"]  # long lines tolerated in this codebase
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.per-file-ignores]
+# Build/demo scripts run as __main__; import ordering and complexity N/A.
+"_demo.py" = ["E402"]
+"build_showcase_pdf.py" = ["E402"]

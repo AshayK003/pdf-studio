@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-08-16
+
+### Added
+- **CI/CD** — GitHub Actions workflow (`.github/workflows/ci.yml`) running ruff lint + pytest across Python 3.10–3.12, plus a wheel build job.
+
+### Changed
+- **Lint config** — added `[tool.ruff]` enforcing error-catching rules (E/F/C90); fixed undefined-name and dead-variable findings.
+- **Install docs** — proper optional extras (`charts`, `tables`); corrected PyPI package name (`pdf-studio-py`); fixed stale verify version.
+
+## [0.1.2] - 2026-08-15
+
+### Added
+- **portfolio_risk template** for NSE Portfolio Risk Scanner
+
+### Fixed
+- **Restored `build()` function** in templates.py for template dispatch
+
 ## [0.1.1] - 2026-08-15
 
 ### Added

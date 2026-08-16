@@ -18,7 +18,7 @@ FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 def test_all_elements_page_count():
     """The full fixture should span 2 pages (has a page break)."""
     path = FIXTURES_DIR / "all-elements.pdf"
-    assert path.exists(), f"Regenerate fixtures: python scripts/generate_fixtures.py"
+    assert path.exists(), "Regenerate fixtures: python scripts/generate_fixtures.py"
     reader = pypdf.PdfReader(str(path))
     assert 2 <= len(reader.pages) <= 3
 

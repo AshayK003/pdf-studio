@@ -9,10 +9,10 @@ from_template docstring. Builders return a fully populated Document.
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from .document import Document
-from .styles import Style, Font
+from .styles import Font, Style
 
 
 def _financial_statement(data, theme=None) -> Document:
@@ -33,7 +33,7 @@ def _financial_statement(data, theme=None) -> Document:
         doc.add_paragraph(data["subtitle"])
     if data.get("kpis"):
         doc.add_kpi_row(data["kpis"])
-    if "composition" in data and data["composition"]:
+    if data.get("composition"):
         labels, values = data["composition"]
         doc.add_donut_chart(labels, values, title="Allocation")
     if data.get("table") is not None:
@@ -59,6 +59,7 @@ def _portfolio_risk(data, theme=None) -> Document:
         generated_at    : datetime string
     """
     from datetime import datetime
+
     import pandas as pd
 
     doc = Document(theme=theme)
@@ -91,7 +92,6 @@ def _portfolio_risk(data, theme=None) -> Document:
     doc.add_paragraph(f"{portfolio.name}  •  {generated_at}", style=Style(font=Font("Inter", 13, italic=True, color=theme.muted_text), space_before=2, space_after=18))
 
     # KPI Row — 4 cards
-    sharpe_val = f"{risk.sharpe:.2f}" if risk else "N/A"
     pnl_val = f"₹{portfolio.total_pnl:+,.0f}"
     pnl_pct = f"{portfolio.total_pnl_pct:+.2f}%"
     kpi_cards = [
@@ -113,7 +113,7 @@ def _portfolio_risk(data, theme=None) -> Document:
         ax.set_xlim(0, 80)
         ax.set_ylim(0, 1)
         ax.axis("off")
-        for i in range(0, 80):
+        for i in range(80):
             c = theme.good if i < 15 else theme.accent if i < 30 else theme.bad
             ax.axvspan(i, i + 1, 0, 0.55, facecolor=c, alpha=0.5, ec="none")
         val = min(risk.volatility_annual, 80)
@@ -181,7 +181,7 @@ def _portfolio_risk(data, theme=None) -> Document:
         sizes = list(sector_data.values())
         colors = plt.cm.Set2.colors[: len(labels)]
         fig1, ax1 = plt.subplots(figsize=(3.0, 3.0))
-        wedges, texts, autotexts = ax1.pie(
+        wedges, _texts, autotexts = ax1.pie(
             sizes,
             labels=None,
             autopct="%1.0f%%",

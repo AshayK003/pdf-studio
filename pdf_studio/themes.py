@@ -12,7 +12,6 @@ fill/bullet colour only (1.86:1 on white fails text AA), never used as text.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -48,12 +47,12 @@ class Theme:
     h2: str = "#16213E"
 
     @classmethod
-    def cypher(cls) -> "Theme":
+    def cypher(cls) -> Theme:
         """Refined brand: navy foundation, teal accent. The default."""
         return cls(name="cypher")
 
     @classmethod
-    def ledger(cls) -> "Theme":
+    def ledger(cls) -> Theme:
         """Finance-optimized: deep-green foundation, gold semantic accent.
 
         Green carries growth/profit meaning (PlotSet), gold reads premium and
@@ -77,7 +76,7 @@ class Theme:
         )
 
     @classmethod
-    def slate(cls) -> "Theme":
+    def slate(cls) -> Theme:
         """Approachable: indigo-primary with amber accent (BethanyWorks
 
         'contemporary' pattern — indigo base + warm amber accent reads modern
@@ -101,7 +100,7 @@ class Theme:
         )
 
     @classmethod
-    def get(cls, name: Optional[str]) -> "Theme":
+    def get(cls, name: str | None) -> Theme:
         """Resolve a preset by name, defaulting to cypher."""
         return {
             "cypher": cls.cypher,

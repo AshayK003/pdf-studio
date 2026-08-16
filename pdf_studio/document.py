@@ -7,7 +7,7 @@ __version__ = "0.1.0"
 
 # Verify chart dependencies at import time
 try:
-    from .render import _build_chart
+    from .render import _build_chart  # noqa: F401
     _CHART_AVAILABLE = True
 except ImportError:
     _CHART_AVAILABLE = False
@@ -161,7 +161,7 @@ class Document:
         render_pdf(self, path)
 
     @classmethod
-    def from_template(cls, name: str, data, **kwargs) -> "Document":
+    def from_template(cls, name: str, data, **kwargs) -> Document:
         """Build a document from a named template + data in one call.
 
         Templates map structured data onto the existing element API, so a

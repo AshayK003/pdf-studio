@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from typing import Optional
-
 import matplotlib
 
 matplotlib.use("Agg")
@@ -14,14 +11,13 @@ from matplotlib.colors import LinearSegmentedColormap
 from .themes import Theme
 
 
-def _theme_or(theme: Optional[Theme]) -> Theme:
+def _theme_or(theme: Theme | None) -> Theme:
     return theme or Theme.cypher()
 
 
-def _base_style(fig, ax, title=None, theme: Optional[Theme] = None):
+def _base_style(fig, ax, title=None, theme: Theme | None = None):
     """Apply brand chrome: white canvas, no top/right spine, subtle grid."""
     theme = _theme_or(theme)
-    series = theme.series
     navy = theme.foundation
     grid = theme.grid
     slate = theme.muted_text
@@ -39,7 +35,7 @@ def _base_style(fig, ax, title=None, theme: Optional[Theme] = None):
     return ax
 
 
-def bar_chart(labels, values, title=None, horizontal=False, theme: Optional[Theme] = None):
+def bar_chart(labels, values, title=None, horizontal=False, theme: Theme | None = None):
     """Single-series bar chart. Vertical by default, optional horizontal."""
     theme = _theme_or(theme)
     fig, ax = plt.subplots(figsize=(6.3, 3.2), dpi=150)
@@ -58,7 +54,7 @@ def bar_chart(labels, values, title=None, horizontal=False, theme: Optional[Them
     return fig
 
 
-def line_chart(x, series, title=None, theme: Optional[Theme] = None):
+def line_chart(x, series, title=None, theme: Theme | None = None):
     """Multi-series line chart. series: dict[name -> list[float]]."""
     theme = _theme_or(theme)
     fig, ax = plt.subplots(figsize=(6.3, 3.2), dpi=150)
@@ -76,7 +72,7 @@ def line_chart(x, series, title=None, theme: Optional[Theme] = None):
     return fig
 
 
-def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
+def donut_chart(labels, values, title=None, theme: Theme | None = None):
     """Composition donut. Slice colours cycle the theme series palette.
 
     Legend is placed to the right of the donut to avoid overlap.
@@ -119,7 +115,7 @@ def donut_chart(labels, values, title=None, theme: Optional[Theme] = None):
     return fig
 
 
-def heatmap(matrix, labels, title=None, diverging=True, theme: Optional[Theme] = None):
+def heatmap(matrix, labels, title=None, diverging=True, theme: Theme | None = None):
     """Matrix heatmap. diverging=True centres colour at 0 (for correlations)."""
     theme = _theme_or(theme)
     fig, ax = plt.subplots(figsize=(4.8, 4.2), dpi=150)
@@ -133,7 +129,7 @@ def heatmap(matrix, labels, title=None, diverging=True, theme: Optional[Theme] =
             "brand_seq", [theme.surface, theme.accent, theme.foundation]
         )
         vmin = vmax = None
-    im = ax.imshow(matrix, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
+    ax.imshow(matrix, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
     ax.set_xticks(range(len(labels)))
     ax.set_yticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8, color=theme.muted_text)

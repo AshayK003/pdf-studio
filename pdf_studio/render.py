@@ -10,8 +10,10 @@ from io import BytesIO
 from pathlib import Path
 from threading import Lock
 
-from .styles import Style, Font
-from .themes import Theme
+from reportlab.lib.colors import Color, HexColor
+from reportlab.lib.styles import ParagraphStyle
+
+from .styles import Font, Style
 
 # Bundled font name → (filename, bold, italic). Registering each weight/style
 # as its own named font lets us resolve bold/italic to a real TTF instead of
@@ -39,9 +41,9 @@ def _register_fonts() -> None:
         if _FONTS_REGISTERED:
             return
 
+        from reportlab.lib.fonts import addMapping
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.lib.fonts import addMapping
 
         fonts_dir = Path(__file__).parent / "fonts"
 
@@ -85,10 +87,9 @@ def _resolve_font_name(family: str, bold: bool, italic: bool) -> str:
     return fam  # caller-supplied custom TTF name
 
 
-def _to_reportlab_style(style: Style) -> "ParagraphStyle":
+def _to_reportlab_style(style: Style) -> ParagraphStyle:
     """Convert our Style dataclass to a ReportLab ParagraphStyle."""
-    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
-    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
     align_map = {
         "left": TA_LEFT,
@@ -112,16 +113,13 @@ def _to_reportlab_style(style: Style) -> "ParagraphStyle":
     )
 
 
-def _heading_style(level: int, theme) -> "ParagraphStyle":
+def _heading_style(level: int, theme) -> ParagraphStyle:
     """Return a ReportLab ParagraphStyle sized by heading level.
 
     Brand display hierarchy: Lora Bold with a navy palette and tight leading.
     Colours come from the active Theme. Levels 1–2 get a teal hairline rule
     (added in _build_story).
     """
-    from reportlab.lib.colors import HexColor
-    from reportlab.lib.styles import ParagraphStyle
-
     sizes = {0: 24, 1: 18, 2: 14, 3: 12}
     colors_by_level = {
         0: theme.h0,
@@ -142,10 +140,8 @@ def _heading_style(level: int, theme) -> "ParagraphStyle":
     )
 
 
-def _parse_color(hex_str: str) -> "Color":
+def _parse_color(hex_str: str) -> Color:
     """Parse a hex colour string like '#1a1a1a' into a ReportLab Color object."""
-    from reportlab.lib.colors import HexColor
-
     if re.fullmatch(r"#[0-9a-fA-F]{6}", hex_str) is None:
         raise ValueError(f"Invalid hex color: {hex_str!r}")
 
@@ -163,10 +159,10 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
     an accent rule; body rows use zebra striping in the theme surface.
     """
     from reportlab.lib import colors
-    from reportlab.lib.units import inch
-    from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.enums import TA_LEFT, TA_RIGHT
-    from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 
     # duck-type DataFrame without importing pandas
     if hasattr(data, "iloc"):
@@ -244,7 +240,7 @@ def _build_table(data, caption: str | None, right_align_cols: list[int] | None =
             if cell_val.startswith("#") and len(cell_val) == 7:
                 try:
                     style_cmds.append(("BACKGROUND", (2, i), (2, i), colors.HexColor(cell_val)))
-                except:
+                except (ValueError, AttributeError):
                     pass
 
     t.setStyle(TableStyle(style_cmds))
@@ -271,9 +267,9 @@ def _build_kpi_row(cards: list[dict], theme=None):
     chart labels). Returns a Table flowable.
     """
     from reportlab.lib import colors
-    from reportlab.lib.units import inch
     from reportlab.lib.styles import ParagraphStyle
-    from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 
     if not cards:
         return Spacer(1, 6)
@@ -333,7 +329,6 @@ def _build_chart(
     close_figure: bool = True,
 ):
     """Convert a matplotlib figure into an inline vector PDF flowable."""
-    from io import BytesIO
 
     # SVG via BytesIO → svg2rlg. No temp files.
     svg_io = BytesIO()
@@ -346,7 +341,6 @@ def _build_chart(
             plt.close(figure)
     svg_io.seek(0)
 
-    from reportlab.graphics import renderPDF
     from svglib.svglib import svg2rlg
 
     drawing = svg2rlg(svg_io)
@@ -366,8 +360,7 @@ def _build_chart(
     # refuse to pack two-per-page. Cap their rendered width so they stay
     # proportional and leave room for a neighbour. Wide figures keep full width.
     AVAILABLE = 6.3 * 72
-    if width > AVAILABLE:
-        width = AVAILABLE
+    width = min(width, AVAILABLE)
     # Donut charts are now wider (aspect ~1.24) to accommodate external legend.
     # Don't cap at 4.6in — allow up to 5.5in for these.
     if aspect >= 1.1 and aspect <= 1.35 and width > 5.5 * 72:
@@ -391,7 +384,7 @@ def _build_chart(
 def _build_chart_row(figures: list, space_after: float = 0):
     """Lay out up to two charts in a single row to conserve vertical space."""
     from reportlab.lib.units import inch
-    from reportlab.platypus import Table, TableStyle, Spacer
+    from reportlab.platypus import Spacer, Table, TableStyle
 
     if not figures:
         return Spacer(1, 6)
@@ -430,9 +423,15 @@ def _header_footer_callback(doc, header_text: str | None):
 
 def _build_story(pdf_doc) -> list:
     """Build the list of ReportLab flowables from document elements."""
-    from reportlab.platypus import Paragraph, PageBreak, Spacer
-    from reportlab.platypus import ListFlowable, ListItem, HRFlowable
     from reportlab.lib import colors
+    from reportlab.platypus import (
+        HRFlowable,
+        ListFlowable,
+        ListItem,
+        PageBreak,
+        Paragraph,
+        Spacer,
+    )
 
     theme = pdf_doc.theme
     story = []

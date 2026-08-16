@@ -4,10 +4,11 @@ Generates a 6-page PDF demonstrating every element across all three themes.
 """
 
 from pathlib import Path
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pdf_studio.document import Document
 from pdf_studio.themes import Theme

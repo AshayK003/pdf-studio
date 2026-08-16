@@ -14,14 +14,14 @@ import pdf_studio.render as render_module
 from pdf_studio.document import Document
 from pdf_studio.render import (
     _build_table,
-    _heading_style,
     _header_footer_callback,
+    _heading_style,
     _parse_color,
     _to_reportlab_style,
     render_pdf,
 )
-from pdf_studio.themes import Theme
 from pdf_studio.styles import Font, Style
+from pdf_studio.themes import Theme
 
 
 def test_render_pdf_produces_valid_file(tmp_path: Path):

@@ -1,7 +1,7 @@
 """Tests for pdf_studio.Document API."""
 
 from pdf_studio.document import Document
-from pdf_studio.styles import Style, Font
+from pdf_studio.styles import Font, Style
 
 
 def test_add_heading_stores_element():
