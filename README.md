@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AshayK003/pdf-studio/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
+  <a href="https://github.com/AshayK003/pdf-studio/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
   <a href="https://pypi.org/project/pdf-studio-py/"><img src="https://img.shields.io/pypi/v/pdf-studio-py.svg" alt="PyPI Version"></a>
   <a href="https://pypi.org/project/pdf-studio-py/"><img src="https://img.shields.io/badge/python-≥3.10-blue" alt="Python ≥3.10"></a>
   <a href="https://github.com/AshayK003/pdf-studio/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build"></a>
@@ -294,7 +294,7 @@ High-level principles:
 
 ## License
 
-AGPL v3 — see [LICENSE](LICENSE). Free to use, share, and modify. If you build a closed-source application on top of it, you must release your changes under AGPL as well.
+MIT — see [LICENSE](LICENSE). Free to use, modify, and distribute, including in closed-source and commercial projects. No copyleft obligations.
 
 ---
 
