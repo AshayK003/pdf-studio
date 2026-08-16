@@ -408,3 +408,13 @@ _REGISTRY: dict[str, Callable] = {
     "financial_statement": _financial_statement,
     "portfolio_risk": _portfolio_risk,
 }
+
+
+def build(name: str, data, **kwargs) -> Document:
+    """Dispatch to a registered template builder."""
+    if name not in _REGISTRY:
+        raise ValueError(
+            f"Unknown template '{name}'. Available: {', '.join(_REGISTRY)}"
+        )
+    # Theme may be passed positionally via kwargs from from_template.
+    return _REGISTRY[name](data, **kwargs)
