@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pdf-studio-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "Three lines of code for a PDF with a table, a chart, and a header."
 readme = "README.md"
 license = {text = "AGPL-3.0-only"}
