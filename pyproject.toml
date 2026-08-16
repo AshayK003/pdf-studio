@@ -19,6 +19,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+charts = ["matplotlib", "svglib"]
+tables = ["pandas"]
 dev = ["pytest", "pytest-cov", "ruff", "matplotlib", "pandas", "svglib"]
 
 [project.urls]

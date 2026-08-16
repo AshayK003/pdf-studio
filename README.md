@@ -54,7 +54,7 @@ The document is rendered in **two passes**: the first pass counts pages (for `{t
 ## Quick Start
 
 ```bash
-pip install pdf-studio-py reportlab matplotlib pandas svglib
+pip install "pdf-studio-py[charts,tables]"
 ```
 
 ```python
@@ -225,7 +225,11 @@ Core dependency is **one package**: `reportlab`. Chart and DataFrame features ar
 ### Install from PyPI
 
 ```bash
-pip install pdf-studio
+# Core only (headings, paragraphs, list-of-lists tables, KPIs)
+pip install pdf-studio-py
+
+# With charts (matplotlib + svglib) and pandas DataFrame tables
+pip install "pdf-studio-py[charts,tables]"
 ```
 
 ### Install from source
@@ -246,7 +250,7 @@ pip install -e ".[dev]"
 
 ```bash
 python -c "import pdf_studio; print(pdf_studio.__version__)"
-# ✅ pdf-studio-py v0.1.1
+# ✅ pdf-studio-py v0.1.2
 ```
 
 ## Testing
