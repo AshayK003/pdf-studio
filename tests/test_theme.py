@@ -1,12 +1,13 @@
 """Tests for the Theme system and declarative templates (the pdf-studio moat)."""
 
+import tempfile
 from pathlib import Path
 
 from pdf_studio.document import Document
 from pdf_studio.templates import build
 from pdf_studio.themes import Theme
 
-TMP = Path("C:/Users/Ashay/AppData/Local/Temp")
+TMP = Path(tempfile.gettempdir())
 
 
 def test_presets_are_distinct():
