@@ -261,7 +261,7 @@ def build_comprehensive_showcase():
         "pip install pdf-studio and start generating."
     )
     doc.add_paragraph("")
-    doc.add_paragraph("github.com/AshayK003/pdf-studio  |  MIT")
+    doc.add_paragraph("github.com/AshayK003/pdf-studio  |  AGPL v3")
 
     # Render
     doc.render(str(OUT))
